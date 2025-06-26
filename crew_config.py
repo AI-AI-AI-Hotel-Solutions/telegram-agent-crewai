@@ -16,11 +16,12 @@ task = Task(
     agent=agent
 )
 
-crew = Crew(agents=[agent], tasks=[task])
+crew = Crew(
+    agents=[agent],
+    tasks=[task],
+    process= "sequential"  # Adicione esse parâmetro!
+)
 
 def process_message(text):
-    if text.strip().lower() == "/start":
-        return "Olá! Sou seu concierge virtual. Como posso ajudar hoje?"
-
     result = crew.kickoff(inputs={"input": text})
     return result if isinstance(result, str) else str(result)
