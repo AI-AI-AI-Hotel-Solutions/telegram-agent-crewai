@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: telegram-agent
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: OPENAI_API_KEY
+        value: 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
