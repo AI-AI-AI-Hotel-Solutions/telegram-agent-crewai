@@ -19,5 +19,5 @@ task = Task(
 crew = Crew(agents=[agent], tasks=[task])
 
 def process_message(text):
-    result = crew.kickoff(inputs={'input': text})
+    result = crew.kickoff(inputs=text)
     return result
