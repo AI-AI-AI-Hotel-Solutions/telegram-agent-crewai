@@ -19,5 +19,8 @@ task = Task(
 crew = Crew(agents=[agent], tasks=[task])
 
 def process_message(text):
-    result = crew.kickoff(inputs=text)
-    return result
+    if text.strip().lower() == "/start":
+        return "Olá! Sou seu concierge virtual. Como posso ajudar hoje?"
+
+    result = crew.kickoff(inputs={"input": text})
+    return result if isinstance(result, str) else str(result)
