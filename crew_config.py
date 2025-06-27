@@ -19,10 +19,60 @@ executor = Agent(
 )
 
 task_comando = Task(
-    description="Analise o texto recebido, identifique a ação desejada (registrar, consultar, editar, excluir) e retorne um JSON estruturado com os dados necessários para executar essa ação.",
-    expected_output="Um JSON com o campo 'acao' e os dados correspondentes à operação solicitada.",
+    description="""
+Você é um agente especializado em interpretar comandos de gestores para gerar ordens de serviço.
+
+Dado um texto em linguagem natural, identifique qual das seguintes ações ele descreve:
+- "registrar": inserir uma nova OS na planilha
+- "consultar": buscar dados existentes
+- "editar": modificar uma OS existente
+- "excluir": apagar uma OS existente
+
+Sua tarefa é retornar um JSON estruturado com:
+- Campo 'acao' (registrar, consultar, editar, excluir)
+- Campo correspondente aos dados da ação.
+
+🎯 Exemplos:
+---
+Entrada:
+"Registrar jantar romântico para o hóspede Rodrigo, quarto 12, dia 28 de junho, às 22h. Entrada e prato principal."
+
+Saída:
+{
+  "acao": "registrar",
+  "dados": {
+    "Nome do Hóspede": "Rodrigo",
+    "Quarto": "12",
+    "Data do Serviço": "2025-06-28",
+    "Horário do Serviço": "22:00",
+    "Tipo de Serviço": "Jantar romântico",
+    "Detalhes do Pedido": "Entrada e prato principal",
+    "Prioridade": "Normal"
+  }
+}
+
+---
+Entrada:
+"Excluir o registro do hóspede João no quarto 5 com serviço de café da manhã"
+
+Saída:
+{
+  "acao": "excluir",
+  "criterios": {
+    "Nome do Hóspede": "João",
+    "Quarto": "5",
+    "Tipo de Serviço": "Café da manhã"
+  }
+}
+
+---
+Agora processe a seguinte mensagem:
+{input}
+""",
+    expected_output="Um JSON no formato especificado contendo a ação e os dados.",
     agent=comandante
 )
+
 
 task_execucao = Task(
     description="Receba o JSON retornado e execute a operação solicitada (registro, consulta, edição ou exclusão) na planilha.",
