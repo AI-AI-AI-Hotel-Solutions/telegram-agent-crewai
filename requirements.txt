@@ -2,3 +2,5 @@ flask
 requests
 openai
 crewai
+gspread
+oauth2client
