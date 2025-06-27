@@ -4,6 +4,5 @@ services:
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
-    envVars:
-      - key: OPENAI_API_KEY
-        value: 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
+    
+      
