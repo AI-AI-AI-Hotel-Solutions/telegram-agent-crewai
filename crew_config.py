@@ -23,5 +23,14 @@ crew = Crew(
 )
 
 def process_message(text):
-    result = crew.kickoff(inputs={"input": text})
-    return result if isinstance(result, str) else str(result)
+    try:
+        result = crew.kickoff(inputs={"input": text})
+        print("🔍 Resultado do agente:", result)
+        if isinstance(result, str):
+            return result
+        elif isinstance(result, dict) and "output" in result:
+            return result["output"]
+        else:
+            return str(result)
+    except Exception as e:
+        return f"[ERRO] {type(e).__name__}: {e}"
