@@ -1,9 +1,12 @@
 from crewai import Crew, Agent, Task
-from sheet_handler import executar_acao
 from openai_config import setup_openai
 import json
+import requests
 
 setup_openai()
+
+# URL do seu Web App publicado (substitua pelo seu se necessário)
+WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxx-2ipOcJ4dl1cm-FIGZorV0TxF7xkfmdS3ZPId-5JeriYQ1BWg-16qKzqQI9gZCty/exec"
 
 # Agente responsável por interpretar a linguagem natural
 comandante = Agent(
@@ -77,32 +80,30 @@ Agora processe a seguinte mensagem:
     agent=comandante
 )
 
-# Tarefa 2: executar o comando extraído
+# Tarefa 2: enviar para a planilha via webhook
 task_execucao = Task(
-    description="Receba o JSON retornado e execute a operação solicitada (registro, consulta, edição ou exclusão) na planilha via Apps Script.",
+    description="Receba o JSON retornado e envie para o Webhook Apps Script responsável por registrar/consultar/editar/excluir na planilha.",
     expected_output="Mensagem confirmando a ação ou listando resultados.",
     agent=executor
 )
 
-# Orquestração sequencial dos agentes
 crew = Crew(
     agents=[comandante, executor],
     tasks=[task_comando, task_execucao],
     process="sequential"
 )
 
-# Função principal chamada pelo Telegram
 def process_message(text):
     try:
         resultado = crew.kickoff(inputs={"input": text})
 
-        if isinstance(resultado, dict):
-            return json.dumps(resultado, indent=2, ensure_ascii=False)
-        elif isinstance(resultado, str):
-            return resultado.strip()
-        else:
-            return str(resultado).strip()
+        if isinstance(resultado, dict) and "acao" in resultado:
+            resposta = requests.post(WEBHOOK_URL, json=resultado)
+            return resposta.text
+
+        return resultado if isinstance(resultado, str) else str(resultado)
     except Exception as e:
         return f"[Erro interno]\n{type(e).__name__}: {e}"
+
 
 
