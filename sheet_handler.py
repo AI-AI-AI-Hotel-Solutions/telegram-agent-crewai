@@ -61,6 +61,7 @@ def enviar_requisicao(payload):
 
 # 🎯 Função principal que despacha a ação com base no JSON
 def executar_acao(json_resultado):
+    print("[DEBUG] JSON recebido:", json_resultado)  # 👈 Isso
     acao = json_resultado.get("acao", "")
     
     if acao == "registrar":
