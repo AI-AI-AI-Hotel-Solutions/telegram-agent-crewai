@@ -1,7 +1,7 @@
 import datetime
 import requests
 
-BACKEND_URL = "https://script.google.com/macros/s/SEU_DEPLOY_ID/exec"
+BACKEND_URL = "https://script.google.com/macros/s/AKfycbxx-2ipOcJ4dl1cm-FIGZorV0TxF7xkfmdS3ZPId-5JeriYQ1BWg-16qKzqQI9gZCty/exec"
 EMAIL_AUTOR = "sined.marecas@gmail.com"
 
 def registrar_os(dados):
