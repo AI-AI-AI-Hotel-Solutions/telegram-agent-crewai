@@ -97,15 +97,27 @@ crew = Crew(
 
 def process_message(text):
     try:
-        resultado = crew.kickoff(inputs={"input": text})
+        # Primeiro, roda a task 1 (comandante)
+        interpretacao = task_comando.run(input={"input": text})
 
-        if isinstance(resultado, dict) and "acao" in resultado:
-            print("[DEBUG] JSON estruturado retornado pela IA:", resultado)
-            resposta = executar_acao(resultado)
-            print("[DEBUG] Resposta da execução:", resposta)
-            return resposta
+        print("[DEBUG] JSON interpretado:", interpretacao)
 
-        return resultado if isinstance(resultado, str) else str(resultado)
+        if isinstance(interpretacao, str):
+            try:
+                resultado_json = json.loads(interpretacao)
+            except json.JSONDecodeError:
+                return "❌ Não foi possível interpretar a resposta como JSON."
+        elif isinstance(interpretacao, dict):
+            resultado_json = interpretacao
+        else:
+            return "❌ Resposta inesperada da IA."
+
+        print("[DEBUG] Executando ação na planilha...")
+        resposta = executar_acao(resultado_json)
+        print("[DEBUG] Resposta do Apps Script:", resposta)
+
+        return resposta
+
     except Exception as e:
         return f"[Erro interno]\n{type(e).__name__}: {e}"
 
