@@ -49,14 +49,18 @@ def excluir_os(criterios):
 
 
 def enviar_requisicao(payload):
+    print("[DEBUG] Enviando payload para Apps Script:", json.dumps(payload, indent=2, ensure_ascii=False))
     try:
         response = requests.post(BACKEND_URL, json=payload)
+        print("[DEBUG] Status da resposta:", response.status_code)
+        print("[DEBUG] Conteúdo da resposta:", response.text)
         if response.status_code == 200:
             return response.text.strip()
         else:
             return f"❌ Erro ao conectar com Apps Script (Código {response.status_code})"
     except Exception as e:
         return f"❌ Erro na conexão: {e}"
+
 
 
 # 🎯 Função principal que despacha a ação com base no JSON
