@@ -2,6 +2,7 @@ from flask import Flask, request
 import requests
 import traceback
 from crew_config import process_message
+from sheet_handler import executar_acao
 
 TOKEN = '7504265835:AAGkAEHaMmBW59SlfQ0ga9XuUF-lsx83zRU'
 TELEGRAM_URL = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
