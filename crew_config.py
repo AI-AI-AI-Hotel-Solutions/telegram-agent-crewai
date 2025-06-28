@@ -86,8 +86,6 @@ task_execucao = Task(
     description="Execute a ação na planilha Google com base no JSON fornecido, usando a função `executar_acao` que chama o Apps Script.",
     expected_output="Mensagem confirmando a ação ou listando resultados.",
     agent=executor,
-    function=executar_acao,
-    input_key="output"
 )
 
 
@@ -102,11 +100,15 @@ def process_message(text):
         resultado = crew.kickoff(inputs={"input": text})
 
         if isinstance(resultado, dict) and "acao" in resultado:
-            return executar_acao(resultado)  # 🔁 Chama sua função integrada
+            print("[DEBUG] JSON estruturado retornado pela IA:", resultado)
+            resposta = executar_acao(resultado)
+            print("[DEBUG] Resposta da execução:", resposta)
+            return resposta
 
         return resultado if isinstance(resultado, str) else str(resultado)
     except Exception as e:
         return f"[Erro interno]\n{type(e).__name__}: {e}"
+
 
 
 
