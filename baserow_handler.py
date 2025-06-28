@@ -1,5 +1,6 @@
 import datetime
 import requests
+from crewai_tools import tool
 
 # Substitua pelos seus dados reais
 API_TOKEN = "XqIY4Ru5ELx2ifWKyFGfJVt0HPfEyyAP"
@@ -102,6 +103,7 @@ def excluir_os(criterios):
         return f"❌ Erro na exclusão: {e}"
 
 
+@tool
 def executar_acao(json_resultado):
     acao = json_resultado.get("acao", "")
     if acao == "registrar":
