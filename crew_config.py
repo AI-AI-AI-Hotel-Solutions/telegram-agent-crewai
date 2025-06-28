@@ -1,4 +1,4 @@
-from crewai import Crew, Agent, Task
+ffrom crewai import Crew, Agent, Task
 from sheet_handler import executar_acao
 from openai_config import setup_openai
 import json
@@ -83,7 +83,7 @@ Agora processe a seguinte mensagem:
 
 # Tarefa 2: enviar para a planilha via webhook
 task_execucao = Task(
-    description="Execute a ação na planilha Google com base no JSON fornecido, usando a função `executar_acao` que chama o Apps Script.",
+    description="Execute a ação na planilha Google com base no JSON fornecido, usando a função executar_acao que chama o Apps Script.",
     expected_output="Mensagem confirmando a ação ou listando resultados.",
     agent=executor,
 )
@@ -97,25 +97,17 @@ crew = Crew(
 
 def process_message(text):
     try:
-        # Executa apenas o agente Comandante para interpretar o texto
-        interpretacao = comandante.run(task_comando.description.format(input=text))
+        resultado = crew.kickoff(inputs={"input": text})
 
-        print("[DEBUG] JSON interpretado:", interpretacao)
+        if isinstance(resultado, dict) and "acao" in resultado:
+            print("[DEBUG] JSON estruturado retornado pela IA:", resultado)
+            resposta = executar_acao(resultado)
+            print("[DEBUG] Resposta da execução:", resposta)
+            return resposta
 
-        try:
-            resultado_json = json.loads(interpretacao)
-        except json.JSONDecodeError:
-            return f"❌ Resposta inválida da IA. Esperado JSON. Resposta:\n{interpretacao}"
-
-        print("[DEBUG] Enviando JSON para Apps Script...")
-        resposta = executar_acao(resultado_json)
-        print("[DEBUG] Resposta da execução:", resposta)
-
-        return resposta
-
+        return resultado if isinstance(resultado, str) else str(resultado)
     except Exception as e:
         return f"[Erro interno]\n{type(e).__name__}: {e}"
-
 
 
 
