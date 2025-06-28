@@ -20,13 +20,59 @@ def registrar_os(dados):
             "Prioridade": dados.get("Prioridade", "Normal")
         }
     }
+    return enviar_requisicao(payload)
 
+
+def consultar_os(filtros):
+    payload = {
+        "acao": "consultar",
+        "filtros": filtros
+    }
+    return enviar_requisicao(payload)
+
+
+def editar_os(criterios, novos_dados):
+    payload = {
+        "acao": "editar",
+        "criterios": criterios,
+        "novos_dados": novos_dados
+    }
+    return enviar_requisicao(payload)
+
+
+def excluir_os(criterios):
+    payload = {
+        "acao": "excluir",
+        "criterios": criterios
+    }
+    return enviar_requisicao(payload)
+
+
+def enviar_requisicao(payload):
     try:
         response = requests.post(BACKEND_URL, json=payload)
         if response.status_code == 200:
-            return f"✅ OS registrada com sucesso para o hóspede {dados.get('Nome do Hóspede', '')}!"
+            return response.text.strip()
         else:
-            return f"❌ Erro ao registrar OS. Código: {response.status_code}"
+            return f"❌ Erro ao conectar com Apps Script (Código {response.status_code})"
     except Exception as e:
-        return f"❌ Erro ao conectar com o Apps Script: {e}"
+        return f"❌ Erro na conexão: {e}"
 
+
+# 🎯 Função principal que despacha a ação com base no JSON
+def executar_acao(json_resultado):
+    acao = json_resultado.get("acao", "")
+    
+    if acao == "registrar":
+        return registrar_os(json_resultado.get("dados", {}))
+    elif acao == "consultar":
+        return consultar_os(json_resultado.get("filtros", {}))
+    elif acao == "editar":
+        return editar_os(
+            json_resultado.get("criterios", {}),
+            json_resultado.get("novos_dados", {})
+        )
+    elif acao == "excluir":
+        return excluir_os(json_resultado.get("criterios", {}))
+    else:
+        return "❌ Ação inválida ou não suportada."
