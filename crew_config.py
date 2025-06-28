@@ -102,8 +102,7 @@ def process_message(text):
         resultado = crew.kickoff(inputs={"input": text})
 
         if isinstance(resultado, dict) and "acao" in resultado:
-            resposta = requests.post(WEBHOOK_URL, json=resultado)
-            return resposta.text
+            return executar_acao(resultado)  # 🔁 Chama sua função integrada
 
         return resultado if isinstance(resultado, str) else str(resultado)
     except Exception as e:
