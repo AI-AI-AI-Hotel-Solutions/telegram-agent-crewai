@@ -1,46 +1,32 @@
-import requests
 import datetime
+import requests
 
-# Substitua esta URL pelo link do seu Web App publicado no Apps Script
-SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxx-2ipOcJ4dl1cm-FIGZorV0TxF7xkfmdS3ZPId-5JeriYQ1BWg-16qKzqQI9gZCty/exec"
-
+BACKEND_URL = "https://script.google.com/macros/s/SEU_DEPLOY_ID/exec"
 EMAIL_AUTOR = "sined.marecas@gmail.com"
 
-def executar_acao(json_resultado):
-    if not isinstance(json_resultado, dict) or "acao" not in json_resultado:
-        return "Ação inválida ou não reconhecida."
-
-    acao = json_resultado["acao"]
-    payload = {"acao": acao}
-
-    if acao == "registrar":
-        dados = json_resultado.get("dados", {})
-        payload["dados"] = {
+def registrar_os(dados):
+    agora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    payload = {
+        "acao": "registrar",
+        "dados": {
+            "Data/Hora": agora,
+            "E-mail Autor": EMAIL_AUTOR,
             "Nome do Hóspede": dados.get("Nome do Hóspede", ""),
             "Quarto": dados.get("Quarto", ""),
             "Data do Serviço": dados.get("Data do Serviço", ""),
             "Horário do Serviço": dados.get("Horário do Serviço", ""),
             "Tipo de Serviço": dados.get("Tipo de Serviço", ""),
             "Detalhes do Pedido": dados.get("Detalhes do Pedido", ""),
-            "Prioridade": dados.get("Prioridade", "")
+            "Prioridade": dados.get("Prioridade", "Normal")
         }
-
-    elif acao == "consultar":
-        payload["filtros"] = json_resultado.get("filtros", {})
-
-    elif acao == "editar":
-        payload["criterios"] = json_resultado.get("criterios", {})
-        payload["novos_dados"] = json_resultado.get("novos_dados", {})
-
-    elif acao == "excluir":
-        payload["criterios"] = json_resultado.get("criterios", {})
-
-    else:
-        return "⚠️ Ação não suportada."
+    }
 
     try:
-        response = requests.post(SCRIPT_URL, json=payload)
-        return response.text
+        response = requests.post(BACKEND_URL, json=payload)
+        if response.status_code == 200:
+            return f"✅ OS registrada com sucesso para o hóspede {dados.get('Nome do Hóspede', '')}!"
+        else:
+            return f"❌ Erro ao registrar OS. Código: {response.status_code}"
     except Exception as e:
-        return f"❌ Erro na comunicação com Apps Script: {e}"
+        return f"❌ Erro ao conectar com o Apps Script: {e}"
 
