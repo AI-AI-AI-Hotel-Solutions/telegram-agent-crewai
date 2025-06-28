@@ -1,6 +1,6 @@
 import datetime
 import requests
-from crewai_tools.tools.tool import tool
+from crewai.tools import tool
 
 # Substitua pelos seus dados reais
 API_TOKEN = "XqIY4Ru5ELx2ifWKyFGfJVt0HPfEyyAP"
@@ -103,8 +103,11 @@ def excluir_os(criterios):
         return f"❌ Erro na exclusão: {e}"
 
 
-@tool
-def executar_acao(json_resultado):
+
+
+@tool("Executar ação no Baserow")
+def executar_acao(json_resultado: dict) -> str:
+    """Executa ações no Baserow com base no JSON estruturado retornado pelo agente Comandante."""
     acao = json_resultado.get("acao", "")
     if acao == "registrar":
         return registrar_os(json_resultado.get("dados", {}))
@@ -119,3 +122,4 @@ def executar_acao(json_resultado):
         return excluir_os(json_resultado.get("criterios", {}))
     else:
         return "❌ Ação inválida ou não suportada."
+
