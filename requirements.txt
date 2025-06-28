@@ -4,3 +4,4 @@ openai
 crewai
 gspread
 oauth2client
+psycopg2-binary
