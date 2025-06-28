@@ -10,20 +10,31 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
+
+def prioridade_para_id(texto):
+    mapa = {
+        "Normal": 3616249,
+        "Urgente": 3616250,
+        "Atenção": 3616251
+    }
+    return mapa.get(texto, 3616249)  # Default: Normal
+
+
 def registrar_os(dados):
     agora = datetime.datetime.now().isoformat()
 
     payload = {
-        "Data/Hora": agora,
-        "E-mail Autor": "sined.marecas@gmail.com",
-        "Nome do Hóspede": dados.get("Nome do Hóspede", ""),
-        "Quarto": dados.get("Quarto", ""),
-        "Data do Serviço": dados.get("Data do Serviço", ""),
-        "Horário do Serviço": dados.get("Horário do Serviço", ""),
-        "Tipo de Serviço": dados.get("Tipo de Serviço", ""),
-        "Detalhes do Pedido": dados.get("Detalhes do Pedido", ""),
-        "Prioridade": dados.get("Prioridade", "Normal")
-    }
+    "field_4761397": agora,  # Data/Hora
+    "field_4761405": "sined.marecas@gmail.com",  # E-mail Autor
+    "field_4761406": dados.get("Nome do Hóspede", ""),
+    "field_4761407": dados.get("Quarto", ""),
+    "field_4761412": dados.get("Data do Serviço", ""),
+    "field_4761414": dados.get("Horário do Serviço", ""),
+    "field_4761415": dados.get("Tipo de Serviço", ""),
+    "field_4761417": dados.get("Detalhes do Pedido", ""),
+    "field_4761418": prioridade_para_id(dados.get("Prioridade", "Normal"))
+}
+
 
     try:
         response = requests.post(BASE_URL, json=payload, headers=HEADERS)
