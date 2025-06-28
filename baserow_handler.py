@@ -1,6 +1,6 @@
 import datetime
 import requests
-from crewai_tools import tool
+from crewai_tools.tools.tool import tool
 
 # Substitua pelos seus dados reais
 API_TOKEN = "XqIY4Ru5ELx2ifWKyFGfJVt0HPfEyyAP"
