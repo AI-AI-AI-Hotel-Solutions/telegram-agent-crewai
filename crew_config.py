@@ -16,10 +16,10 @@ comandante = Agent(
 # Agente executor que realiza a ação na base Baserow
 executor = Agent(
     role="Executor de OS",
-    goal="Executar ações diretamente na planilha Google com base em instruções",
+    goal="Executar ações diretamente na base Baserow com base em instruções",
     backstory="Responsável por registrar, consultar, editar ou excluir OS conforme os dados extraídos pelo Comandante.",
-    tools=[executar_acao],  # <- ESTA LINHA FAZ TODA A DIFERENÇA
-    verbose=True
+    verbose=True,
+    tools=[executar_acao]
 )
 
 
