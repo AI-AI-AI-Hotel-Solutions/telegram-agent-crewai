@@ -96,13 +96,13 @@ def process_message(text):
     try:
         resultado = crew.kickoff(inputs={"input": text})
 
-        # Se o resultado final for um JSON interpretável, convertemos
         if isinstance(resultado, dict):
             return json.dumps(resultado, indent=2, ensure_ascii=False)
         elif isinstance(resultado, str):
-            return resultado
+            return resultado.strip()
         else:
-            return str(resultado)
+            return str(resultado).strip()
     except Exception as e:
         return f"[Erro interno]\n{type(e).__name__}: {e}"
+
 
