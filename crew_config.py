@@ -1,5 +1,5 @@
-ffrom crewai import Crew, Agent, Task
-from sheet_handler import executar_acao
+from crewai import Crew, Agent, Task
+from baserow_handler import executar_acao
 from openai_config import setup_openai
 import json
 import requests
@@ -81,13 +81,14 @@ Agora processe a seguinte mensagem:
     agent=comandante
 )
 
-# Tarefa 2: enviar para a planilha via webhook
+# Tarefa 2: executar a ação na base Baserow
 task_execucao = Task(
-    description="Execute a ação na planilha Google com base no JSON fornecido, usando a função executar_acao que chama o Apps Script.",
+    description="Execute a ação na base Baserow com base no JSON fornecido, usando a função executar_acao.",
     expected_output="Mensagem confirmando a ação ou listando resultados.",
     agent=executor,
+    function=executar_acao,
+    input_key="output"
 )
-
 
 crew = Crew(
     agents=[comandante, executor],
