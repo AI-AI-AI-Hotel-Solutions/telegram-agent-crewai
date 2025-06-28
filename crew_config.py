@@ -1,9 +1,11 @@
 from crewai import Crew, Agent, Task
 from sheet_handler import executar_acao
 from openai_config import setup_openai
+import json
 
 setup_openai()
 
+# Agente responsável por interpretar a linguagem natural
 comandante = Agent(
     role="Comandante de OS",
     goal="Interpretar comandos em linguagem natural e converter em ações estruturadas de OS",
@@ -11,6 +13,7 @@ comandante = Agent(
     verbose=True
 )
 
+# Agente executor que realiza a ação na planilha via Apps Script
 executor = Agent(
     role="Executor de OS",
     goal="Executar ações diretamente na planilha Google com base em instruções",
@@ -18,6 +21,7 @@ executor = Agent(
     verbose=True
 )
 
+# Tarefa 1: interpretar linguagem natural
 task_comando = Task(
     description="""
 Você é um agente especializado em interpretar comandos de gestores para gerar ordens de serviço.
@@ -73,20 +77,32 @@ Agora processe a seguinte mensagem:
     agent=comandante
 )
 
-
+# Tarefa 2: executar o comando extraído
 task_execucao = Task(
-    description="Receba o JSON retornado e execute a operação solicitada (registro, consulta, edição ou exclusão) na planilha.",
+    description="Receba o JSON retornado e execute a operação solicitada (registro, consulta, edição ou exclusão) na planilha via Apps Script.",
     expected_output="Mensagem confirmando a ação ou listando resultados.",
     agent=executor
 )
 
+# Orquestração sequencial dos agentes
 crew = Crew(
     agents=[comandante, executor],
     tasks=[task_comando, task_execucao],
     process="sequential"
 )
 
+# Função principal chamada pelo Telegram
 def process_message(text):
-    resultado = crew.kickoff(inputs={"input": text})
-    return resultado if isinstance(resultado, str) else str(resultado)
+    try:
+        resultado = crew.kickoff(inputs={"input": text})
+
+        # Se o resultado final for um JSON interpretável, convertemos
+        if isinstance(resultado, dict):
+            return json.dumps(resultado, indent=2, ensure_ascii=False)
+        elif isinstance(resultado, str):
+            return resultado
+        else:
+            return str(resultado)
+    except Exception as e:
+        return f"[Erro interno]\n{type(e).__name__}: {e}"
 
