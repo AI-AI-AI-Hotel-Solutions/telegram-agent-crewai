@@ -5,7 +5,7 @@ import json
 
 setup_openai()
 
-# Agente responsável por interpretar linguagem natural
+# Agente que interpreta comandos em linguagem natural
 comandante = Agent(
     role="Comandante de OS",
     goal="Interpretar comandos em linguagem natural e converter em ações estruturadas de OS",
@@ -13,17 +13,16 @@ comandante = Agent(
     verbose=True
 )
 
-# Agente executor que realiza a ação na base Baserow
+# Agente executor que atua com o Baserow
 executor = Agent(
     role="Executor de OS",
     goal="Executar ações diretamente na base Baserow com base em instruções",
     backstory="Responsável por registrar, consultar, editar ou excluir OS conforme os dados extraídos pelo Comandante.",
     verbose=True,
-    tools=[executar_acao]
+    tools=[executar_acao]  # Importante: esta é a ferramenta utilizada na task_execucao
 )
 
-
-# Tarefa 1: interpretar linguagem natural
+# Task 1 — interpretação
 task_comando = Task(
     description="""
 Você é um agente especializado em interpretar comandos de gestores para gerar ordens de serviço.
@@ -79,28 +78,27 @@ Agora processe a seguinte mensagem:
     agent=comandante
 )
 
-# Task 2 — execução no Baserow
+# Task 2 — execução da ação com o JSON gerado
 task_execucao = Task(
-    description="Execute a ação na base Baserow com base no JSON fornecido, usando a função executar_acao.",
+    description="Execute a ação na base Baserow com base no JSON fornecido.",
     expected_output="Mensagem confirmando a ação ou listando resultados.",
     agent=executor,
     function=executar_acao,
-    input_key="output"  # Isso é a saída da task anterior (task_comando)
+    input_key="output"  # Usa a saída de task_comando como entrada da ferramenta
 )
 
-# Orquestração sequencial
+# Orquestração da Crew
 crew = Crew(
     agents=[comandante, executor],
     tasks=[task_comando, task_execucao],
     process="sequential"
 )
 
-# Função principal chamada pelo webhook
+# Função principal do sistema
 def process_message(text):
     try:
         resultado = crew.kickoff(inputs={"input": text})
         return resultado if isinstance(resultado, str) else str(resultado)
     except Exception as e:
         return f"[Erro interno]\n{type(e).__name__}: {e}"
-
 
