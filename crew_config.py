@@ -28,14 +28,18 @@ task_comando = Task(
 Você é um agente especializado em interpretar comandos de gestores para gerar ordens de serviço.
 
 Dado um texto em linguagem natural, identifique qual das seguintes ações ele descreve:
-- "registrar": inserir uma nova OS na planilha
+- "registrar": inserir uma nova OS na base
 - "consultar": buscar dados existentes
 - "editar": modificar uma OS existente
 - "excluir": apagar uma OS existente
 
 Sua tarefa é retornar um JSON estruturado com:
 - Campo 'acao' (registrar, consultar, editar, excluir)
-- Campo correspondente aos dados da ação.
+- Campo correspondente aos dados da ação:
+  - Para 'registrar': use o campo 'dados'
+  - Para 'consultar': use o campo 'filtros'
+  - Para 'editar': use os campos 'criterios' e 'novos_dados'
+  - Para 'excluir': use o campo 'criterios'
 
 🎯 Exemplos:
 ---
@@ -71,12 +75,29 @@ Saída:
 }
 
 ---
+Entrada:
+"Atualizar o serviço do hóspede Alejandro para dia 30 de junho e marcar como urgente."
+
+Saída:
+{
+  "acao": "editar",
+  "criterios": {
+    "Nome do Hóspede": "Alejandro"
+  },
+  "novos_dados": {
+    "Data do Serviço": "2025-06-30",
+    "Prioridade": "Urgente"
+  }
+}
+
+---
 Agora processe a seguinte mensagem:
 {input}
 """,
     expected_output="Um JSON no formato especificado contendo a ação e os dados.",
     agent=comandante
 )
+
 
 # Task 2 — execução da ação com o JSON gerado
 task_execucao = Task(
