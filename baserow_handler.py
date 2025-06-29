@@ -2,7 +2,7 @@ import datetime
 import requests
 from crewai.tools import tool
 
-# Substitua pelos seus dados reais
+# Token e base do Baserow
 API_TOKEN = "XqIY4Ru5ELx2ifWKyFGfJVt0HPfEyyAP"
 TABLE_ID = "589034"
 BASE_URL = f"https://api.baserow.io/api/database/rows/table/{TABLE_ID}/"
@@ -11,6 +11,18 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
+# Mapeamento dos campos legíveis para os field_xxx do Baserow
+FIELD_MAP = {
+    "Data/Hora": "field_4761397",
+    "E-mail Autor": "field_4761405",
+    "Nome do Hóspede": "field_4761406",
+    "Quarto": "field_4761407",
+    "Data do Serviço": "field_4761412",
+    "Horário do Serviço": "field_4761414",
+    "Tipo de Serviço": "field_4761415",
+    "Detalhes do Pedido": "field_4761417",
+    "Prioridade": "field_4761418"
+}
 
 def prioridade_para_id(texto):
     mapa = {
@@ -18,36 +30,35 @@ def prioridade_para_id(texto):
         "Urgente": 3616250,
         "Atenção": 3616251
     }
-    return mapa.get(texto, 3616249)  # Default: Normal
+    return mapa.get(texto, 3616249)
 
+def mapear_campos(dados: dict) -> dict:
+    mapeado = {}
+    for chave, valor in dados.items():
+        id_campo = FIELD_MAP.get(chave)
+        if id_campo:
+            if chave == "Prioridade":
+                valor = prioridade_para_id(valor)
+            mapeado[id_campo] = valor
+    return mapeado
 
 def registrar_os(dados):
     agora = datetime.datetime.now().isoformat()
-
-    payload = {
-    "field_4761397": agora,  # Data/Hora
-    "field_4761405": "sined.marecas@gmail.com",  # E-mail Autor
-    "field_4761406": dados.get("Nome do Hóspede", ""),
-    "field_4761407": dados.get("Quarto", ""),
-    "field_4761412": dados.get("Data do Serviço", ""),
-    "field_4761414": dados.get("Horário do Serviço", ""),
-    "field_4761415": dados.get("Tipo de Serviço", ""),
-    "field_4761417": dados.get("Detalhes do Pedido", ""),
-    "field_4761418": prioridade_para_id(dados.get("Prioridade", "Normal"))
-}
-
+    payload = mapear_campos(dados)
+    payload[FIELD_MAP["Data/Hora"]] = agora
+    payload[FIELD_MAP["E-mail Autor"]] = "sined.marecas@gmail.com"
 
     try:
         response = requests.post(BASE_URL, json=payload, headers=HEADERS)
-        if response.status_code == 200 or response.status_code == 201:
+        if response.status_code in [200, 201]:
             return "✅ OS registrada com sucesso!"
         else:
             return f"❌ Erro ({response.status_code}): {response.text}"
     except Exception as e:
         return f"❌ Erro na requisição: {e}"
 
-
 def consultar_os(filtros):
+    filtros = mapear_campos(filtros)
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
         if response.status_code == 200:
@@ -62,8 +73,9 @@ def consultar_os(filtros):
     except Exception as e:
         return f"❌ Erro na consulta: {e}"
 
-
 def editar_os(criterios, novos_dados):
+    criterios = mapear_campos(criterios)
+    novos_dados = mapear_campos(novos_dados)
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
         if response.status_code == 200:
@@ -82,8 +94,8 @@ def editar_os(criterios, novos_dados):
     except Exception as e:
         return f"❌ Erro na edição: {e}"
 
-
 def excluir_os(criterios):
+    criterios = mapear_campos(criterios)
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
         if response.status_code == 200:
@@ -102,12 +114,8 @@ def excluir_os(criterios):
     except Exception as e:
         return f"❌ Erro na exclusão: {e}"
 
-
-
-
 @tool("Executar ação no Baserow")
 def executar_acao(json_resultado: dict) -> str:
-    """Executa ações no Baserow com base no JSON estruturado retornado pelo agente Comandante."""
     acao = json_resultado.get("acao", "")
     if acao == "registrar":
         return registrar_os(json_resultado.get("dados", {}))
