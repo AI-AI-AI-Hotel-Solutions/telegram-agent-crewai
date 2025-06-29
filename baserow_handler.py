@@ -116,6 +116,10 @@ def excluir_os(criterios):
 
 @tool("Executar ação no Baserow")
 def executar_acao(json_resultado: dict) -> str:
+    """
+    Executa uma ação no Baserow com base em um JSON estruturado contendo a chave 'acao'.
+    Pode registrar, consultar, editar ou excluir OSs conforme o conteúdo da requisição.
+    """
     acao = json_resultado.get("acao", "")
     if acao == "registrar":
         return registrar_os(json_resultado.get("dados", {}))
