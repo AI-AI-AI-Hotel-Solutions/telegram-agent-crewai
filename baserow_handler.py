@@ -25,22 +25,70 @@ FIELD_MAP = {
 }
 
 def prioridade_para_id(texto):
+    texto = str(texto).strip().lower()
+
     mapa = {
-        "Normal": 3616249,
-        "Urgente": 3616250,
-        "Atenção": 3616251
+        "normal": 3616249,
+        "urgente": 3616250,
+        "atenção": 3616251,
+        "vip": 3616251,  # trata VIP como atenção
+        "cliente vip": 3616251,
+        "cliente habitue": 3641220, 
     }
-    return mapa.get(texto, 3616249)
+
+    return mapa.get(texto, 3616249)  # padrão = Normal
+
+
+
+def serializar_detalhes(detalhes):
+    if isinstance(detalhes, dict):
+        partes = [f"{k}: {v}" for k, v in detalhes.items()]
+        return "; ".join(partes)
+    return str(detalhes)
+
+def normalizar_data(data):
+    try:
+        if isinstance(data, str):
+            data = data.strip().replace("/", "-")
+            partes = data.split("-")
+            if len(partes) == 3 and len(partes[0]) != 4:
+                # Supõe formato dd-mm-yyyy → converte para yyyy-mm-dd
+                partes = partes[::-1]
+            return "-".join(partes)
+        return str(data)
+    except:
+        return str(data)
+
 
 def mapear_campos(dados: dict) -> dict:
     mapeado = {}
+
     for chave, valor in dados.items():
+        # Trata múltiplos hóspedes no mesmo campo
+        if chave == "Nome do Hóspede" and isinstance(valor, str) and " e " in valor.lower():
+            nomes = [n.strip() for n in valor.split(" e ")]
+            if len(nomes) >= 2:
+                valor_original = valor
+                valor = nomes[0]  # Primeiro hóspede
+                # Acrescenta os acompanhantes nos detalhes
+                detalhes_atuais = dados.get("Detalhes do Pedido", "")
+                acompanhantes = f"Acompanhante(s): {', '.join(nomes[1:])}."
+                dados["Detalhes do Pedido"] = f"{acompanhantes} {detalhes_atuais}".strip()
+
         id_campo = FIELD_MAP.get(chave)
         if id_campo:
+            # Converte campos especiais
             if chave == "Prioridade":
                 valor = prioridade_para_id(valor)
+            elif chave == "Data do Serviço":
+                valor = normalizar_data(valor)
+            elif chave == "Detalhes do Pedido":
+                valor = serializar_detalhes(valor)
+
             mapeado[id_campo] = valor
+
     return mapeado
+
 
 def registrar_os(dados):
     agora = datetime.datetime.now().isoformat()
@@ -120,18 +168,36 @@ def executar_acao(json_resultado: dict) -> str:
     Executa uma ação no Baserow com base em um JSON estruturado contendo a chave 'acao'.
     Pode registrar, consultar, editar ou excluir OSs conforme o conteúdo da requisição.
     """
-    acao = json_resultado.get("acao", "")
+    if not isinstance(json_resultado, dict):
+        return "❌ Erro: JSON inválido recebido."
+
+    acao = json_resultado.get("acao", "").lower()
+
     if acao == "registrar":
-        return registrar_os(json_resultado.get("dados", {}))
+        dados = json_resultado.get("dados", {})
+        if not dados:
+            return "❌ Erro: Dados ausentes para registro de OS."
+        return registrar_os(dados)
+
     elif acao == "consultar":
-        return consultar_os(json_resultado.get("filtros", {}))
+        filtros = json_resultado.get("filtros", {})
+        if not filtros:
+            return "❌ Erro: Filtros ausentes para consulta."
+        return consultar_os(filtros)
+
     elif acao == "editar":
-        return editar_os(
-            json_resultado.get("criterios", {}),
-            json_resultado.get("novos_dados", {})
-        )
+        criterios = json_resultado.get("criterios", {})
+        novos_dados = json_resultado.get("novos_dados", {})
+        if not criterios or not novos_dados:
+            return "❌ Erro: Critérios ou dados ausentes para edição."
+        return editar_os(criterios, novos_dados)
+
     elif acao == "excluir":
-        return excluir_os(json_resultado.get("criterios", {}))
+        criterios = json_resultado.get("criterios", {})
+        if not criterios:
+            return "❌ Erro: Critérios ausentes para exclusão."
+        return excluir_os(criterios)
+
     else:
         return "❌ Ação inválida ou não suportada."
 
