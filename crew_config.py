@@ -91,8 +91,12 @@ Saída:
 }
 
 ---
+Observação:
+Se identificar que o hóspede é "cliente habitual" ou "cliente habitue", defina o campo de "Prioridade" como "cliente habitue" e **não adicione o campo "Cliente Habitual".
+
 Agora processe a seguinte mensagem:
 {input}
+
 """,
     expected_output="Um JSON no formato especificado contendo a ação e os dados.",
     agent=comandante
