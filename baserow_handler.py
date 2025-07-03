@@ -104,17 +104,24 @@ def mapear_campos(dados: dict) -> dict:
 def formatar_os(os: dict) -> str:
     prioridade = os.get('field_4761418', {}).get('value', 'Normal')
     detalhes = os.get('field_4761417', '')
-    return f"""
-📄 Detalhes da OS de {os.get('field_4761406', '---')}:
+    data_servico = os.get('field_4761412', '---')
+    criado_em = os.get('field_4761397', '')
 
-🛏️ Quarto: {os.get('field_4761407', '---')}
-📅 Data do Serviço: {os.get('field_4761412', '---')}
-⏰ Horário: {os.get('field_4761414', '---')}
-🍽️ Tipo de Serviço: {os.get('field_4761415', '---')}
-📝 Detalhes do Pedido: {detalhes}
-🔖 Prioridade: {prioridade}
-📧 E-mail: {os.get('field_4761405', '---')}
-🕓 Criado em: {os.get('field_4761397', '')[:10]} às {os.get('field_4761397', '')[11:16]}
+    try:
+        criado_dt = datetime.datetime.fromisoformat(criado_em.replace("Z", "+00:00"))
+        criado_formatado = f"{criado_dt.date()} às {criado_dt.strftime('%H:%M')}"
+    except:
+        criado_formatado = criado_em
+
+    return f"""
+- Quarto: {os.get('field_4761407', '---')}
+- Data do Serviço: {data_servico}
+- Horário: {os.get('field_4761414', '---')}
+- Tipo de Serviço: {os.get('field_4761415', '---')}
+- Detalhes do Pedido: {detalhes}
+- Prioridade: {prioridade}
+- Autor: {os.get('field_4761405', '---')}
+- Criado em: {criado_formatado}
 """.strip()
 
 def registrar_os(dados):
