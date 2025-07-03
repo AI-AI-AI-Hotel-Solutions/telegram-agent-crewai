@@ -27,20 +27,16 @@ FIELD_MAP = {
 
 def prioridade_para_id(texto):
     texto = str(texto).strip().lower()
-
     mapa = {
         "normal": 3616249,
         "urgente": 3616250,
         "atenção": 3616251,
-        "vip": 3616251,  # trata VIP como atenção
+        "vip": 3616251,
         "cliente vip": 3616251,
         "cliente habitue": 3641220, 
         "cliente habitual": 3641220
     }
-
-    return mapa.get(texto, 3616249)  # padrão = Normal
-
-
+    return mapa.get(texto, 3616249)
 
 def serializar_detalhes(detalhes):
     if isinstance(detalhes, dict):
@@ -54,41 +50,31 @@ def normalizar_data(data):
             data = data.strip().replace("/", "-")
             partes = data.split("-")
             if len(partes) == 3 and len(partes[0]) != 4:
-                # Supõe formato dd-mm-yyyy → converte para yyyy-mm-dd
                 partes = partes[::-1]
             return "-".join(partes)
         return str(data)
     except:
         return str(data)
 
-
-import re
-
 def mapear_campos(dados: dict) -> dict:
     mapeado = {}
-
-    # 🆕 Caso 'Prioridade' esteja ausente, usar 'Status do Cliente' como fallback
     if "Prioridade" not in dados and "Status do Cliente" in dados:
         status = str(dados["Status do Cliente"]).strip().lower()
         dados["Prioridade"] = status
-
     for chave, valor in dados.items():
-        # Trata múltiplos hóspedes no campo "Nome do Hóspede"
+        if chave == "Nomes dos Hóspedes":
+            chave = "Nome do Hóspede"
+            valor = " e ".join(valor) if isinstance(valor, list) else valor
         if chave == "Nome do Hóspede" and isinstance(valor, str) and " e " in valor.lower():
             nomes = [n.strip() for n in valor.split(" e ")]
             if len(nomes) >= 2:
-                valor = nomes[0]  # Primeiro hóspede
-                # Adiciona acompanhantes em "Detalhes do Pedido"
+                valor = nomes[0]
                 detalhes_atuais = dados.get("Detalhes do Pedido", "")
                 acompanhantes = f"Acompanhante(s): {', '.join(nomes[1:])}."
                 dados["Detalhes do Pedido"] = f"{acompanhantes} {detalhes_atuais}".strip()
-
-        # Mapeia para o campo correto da tabela
         id_campo = FIELD_MAP.get(chave)
         if not id_campo:
             continue
-
-        # Tratamento específico por campo
         if chave == "Prioridade":
             valor = prioridade_para_id(valor)
         elif chave == "Data do Serviço":
@@ -96,23 +82,32 @@ def mapear_campos(dados: dict) -> dict:
         elif chave == "Detalhes do Pedido":
             valor = serializar_detalhes(valor)
         elif chave == "Quarto":
-            # Extrai número do campo "Quarto", mesmo que contenha texto (ex: "UH23")
             numeros = re.findall(r"\d+", str(valor))
             valor = int(numeros[0]) if numeros else 0
-
         mapeado[id_campo] = valor
-
     return mapeado
 
+def formatar_os(os: dict) -> str:
+    prioridade = os.get('field_4761418', {}).get('value', 'Normal')
+    detalhes = os.get('field_4761417', '')
+    return f"""
+📄 Detalhes da OS de {os.get('field_4761406', '---')}:
 
-
+🛏️ Quarto: {os.get('field_4761407', '---')}
+📅 Data do Serviço: {os.get('field_4761412', '---')}
+⏰ Horário: {os.get('field_4761414', '---')}
+🍽️ Tipo de Serviço: {os.get('field_4761415', '---')}
+📝 Detalhes do Pedido: {detalhes}
+🔖 Prioridade: {prioridade}
+📧 Autor: {os.get('field_4761405', '---')}
+🕓 Criado em: {os.get('field_4761397', '')[:10]} às {os.get('field_4761397', '')[11:16]}
+""".strip()
 
 def registrar_os(dados):
     agora = datetime.datetime.now().isoformat()
     payload = mapear_campos(dados)
     payload[FIELD_MAP["Data/Hora"]] = agora
     payload[FIELD_MAP["E-mail Autor"]] = "sined.marecas@gmail.com"
-
     try:
         response = requests.post(BASE_URL, json=payload, headers=HEADERS)
         if response.status_code in [200, 201]:
@@ -132,7 +127,7 @@ def consultar_os(filtros):
             for row in dados:
                 if all(str(row.get(k, "")).lower() == str(v).lower() for k, v in filtros.items()):
                     resultados.append(row)
-            return f"🔍 {len(resultados)} resultado(s):\n\n" + "\n\n".join(str(r) for r in resultados) if resultados else "Nenhuma OS encontrada."
+            return f"🔍 {len(resultados)} resultado(s):\n\n" + "\n\n".join(formatar_os(r) for r in resultados) if resultados else "Nenhuma OS encontrada."
         else:
             return f"❌ Erro ao consultar OS ({response.status_code})"
     except Exception as e:
@@ -187,34 +182,29 @@ def executar_acao(json_resultado: dict) -> str:
     """
     if not isinstance(json_resultado, dict):
         return "❌ Erro: JSON inválido recebido."
-
     acao = json_resultado.get("acao", "").lower()
-
     if acao == "registrar":
         dados = json_resultado.get("dados", {})
         if not dados:
             return "❌ Erro: Dados ausentes para registro de OS."
         return registrar_os(dados)
-
     elif acao == "consultar":
         filtros = json_resultado.get("filtros", {})
         if not filtros:
             return "❌ Erro: Filtros ausentes para consulta."
         return consultar_os(filtros)
-
     elif acao == "editar":
         criterios = json_resultado.get("criterios", {})
         novos_dados = json_resultado.get("novos_dados", {})
         if not criterios or not novos_dados:
             return "❌ Erro: Critérios ou dados ausentes para edição."
         return editar_os(criterios, novos_dados)
-
     elif acao == "excluir":
         criterios = json_resultado.get("criterios", {})
         if not criterios:
             return "❌ Erro: Critérios ausentes para exclusão."
         return excluir_os(criterios)
-
     else:
         return "❌ Ação inválida ou não suportada."
+
 
