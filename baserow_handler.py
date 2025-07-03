@@ -25,6 +25,13 @@ FIELD_MAP = {
     "Prioridade": "field_4761418"
 }
 
+# Sinônimos aceitos para campos
+ALIASES = {
+    "Nomes dos Hóspedes": "Nome do Hóspede",
+    "Hospedes": "Nome do Hóspede",
+    "Hóspedes": "Nome do Hóspede"
+}
+
 def prioridade_para_id(texto):
     texto = str(texto).strip().lower()
     mapa = {
@@ -61,10 +68,13 @@ def mapear_campos(dados: dict) -> dict:
     if "Prioridade" not in dados and "Status do Cliente" in dados:
         status = str(dados["Status do Cliente"]).strip().lower()
         dados["Prioridade"] = status
+
     for chave, valor in dados.items():
-        if chave == "Nomes dos Hóspedes":
-            chave = "Nome do Hóspede"
-            valor = " e ".join(valor) if isinstance(valor, list) else valor
+        chave = ALIASES.get(chave, chave)
+
+        if chave == "Nome do Hóspede" and isinstance(valor, list):
+            valor = " e ".join(valor)
+
         if chave == "Nome do Hóspede" and isinstance(valor, str) and " e " in valor.lower():
             nomes = [n.strip() for n in valor.split(" e ")]
             if len(nomes) >= 2:
@@ -72,9 +82,11 @@ def mapear_campos(dados: dict) -> dict:
                 detalhes_atuais = dados.get("Detalhes do Pedido", "")
                 acompanhantes = f"Acompanhante(s): {', '.join(nomes[1:])}."
                 dados["Detalhes do Pedido"] = f"{acompanhantes} {detalhes_atuais}".strip()
+
         id_campo = FIELD_MAP.get(chave)
         if not id_campo:
             continue
+
         if chave == "Prioridade":
             valor = prioridade_para_id(valor)
         elif chave == "Data do Serviço":
@@ -84,7 +96,9 @@ def mapear_campos(dados: dict) -> dict:
         elif chave == "Quarto":
             numeros = re.findall(r"\d+", str(valor))
             valor = int(numeros[0]) if numeros else 0
+
         mapeado[id_campo] = valor
+
     return mapeado
 
 def formatar_os(os: dict) -> str:
@@ -99,7 +113,7 @@ def formatar_os(os: dict) -> str:
 🍽️ Tipo de Serviço: {os.get('field_4761415', '---')}
 📝 Detalhes do Pedido: {detalhes}
 🔖 Prioridade: {prioridade}
-📧 Autor: {os.get('field_4761405', '---')}
+📧 E-mail: {os.get('field_4761405', '---')}
 🕓 Criado em: {os.get('field_4761397', '')[:10]} às {os.get('field_4761397', '')[11:16]}
 """.strip()
 
