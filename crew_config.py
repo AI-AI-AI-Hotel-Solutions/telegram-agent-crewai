@@ -108,8 +108,8 @@ task_execucao = Task(
     description="Execute a ação na base Baserow com base no JSON fornecido.",
     expected_output="Mensagem confirmando a ação ou listando resultados.",
     agent=executor,
-    function=executar_acao,
-    input_key="output"  # Usa a saída de task_comando como entrada da ferramenta
+    tool=executar_acao,
+    input={"json_resultado": "{output}"}
 )
 
 # Orquestração da Crew
