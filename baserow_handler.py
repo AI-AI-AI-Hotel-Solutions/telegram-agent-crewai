@@ -107,7 +107,7 @@ def registrar_os(dados):
     agora = datetime.datetime.now().isoformat()
     payload = mapear_campos(dados)
     payload[FIELD_MAP["Data/Hora"]] = agora
-    payload[FIELD_MAP["E-mail Autor"]] = "sined.marecas@gmail.com"
+    payload[FIELD_MAP["E-mail Autor"]] = "teste@gmail.com"
     try:
         response = requests.post(BASE_URL, json=payload, headers=HEADERS)
         if response.status_code in [200, 201]:
