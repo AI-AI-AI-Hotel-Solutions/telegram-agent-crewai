@@ -1,6 +1,7 @@
 import datetime
 import requests
 from crewai.tools import tool
+import re
 
 # Token e base do Baserow
 API_TOKEN = "XqIY4Ru5ELx2ifWKyFGfJVt0HPfEyyAP"
@@ -34,6 +35,7 @@ def prioridade_para_id(texto):
         "vip": 3616251,  # trata VIP como atenção
         "cliente vip": 3616251,
         "cliente habitue": 3641220, 
+        "cliente habitual": 3641220
     }
 
     return mapa.get(texto, 3616249)  # padrão = Normal
@@ -60,34 +62,49 @@ def normalizar_data(data):
         return str(data)
 
 
+import re
+
 def mapear_campos(dados: dict) -> dict:
     mapeado = {}
 
+    # 🆕 Caso 'Prioridade' esteja ausente, usar 'Status do Cliente' como fallback
+    if "Prioridade" not in dados and "Status do Cliente" in dados:
+        status = str(dados["Status do Cliente"]).strip().lower()
+        dados["Prioridade"] = status
+
     for chave, valor in dados.items():
-        # Trata múltiplos hóspedes no mesmo campo
+        # Trata múltiplos hóspedes no campo "Nome do Hóspede"
         if chave == "Nome do Hóspede" and isinstance(valor, str) and " e " in valor.lower():
             nomes = [n.strip() for n in valor.split(" e ")]
             if len(nomes) >= 2:
-                valor_original = valor
                 valor = nomes[0]  # Primeiro hóspede
-                # Acrescenta os acompanhantes nos detalhes
+                # Adiciona acompanhantes em "Detalhes do Pedido"
                 detalhes_atuais = dados.get("Detalhes do Pedido", "")
                 acompanhantes = f"Acompanhante(s): {', '.join(nomes[1:])}."
                 dados["Detalhes do Pedido"] = f"{acompanhantes} {detalhes_atuais}".strip()
 
+        # Mapeia para o campo correto da tabela
         id_campo = FIELD_MAP.get(chave)
-        if id_campo:
-            # Converte campos especiais
-            if chave == "Prioridade":
-                valor = prioridade_para_id(valor)
-            elif chave == "Data do Serviço":
-                valor = normalizar_data(valor)
-            elif chave == "Detalhes do Pedido":
-                valor = serializar_detalhes(valor)
+        if not id_campo:
+            continue
 
-            mapeado[id_campo] = valor
+        # Tratamento específico por campo
+        if chave == "Prioridade":
+            valor = prioridade_para_id(valor)
+        elif chave == "Data do Serviço":
+            valor = normalizar_data(valor)
+        elif chave == "Detalhes do Pedido":
+            valor = serializar_detalhes(valor)
+        elif chave == "Quarto":
+            # Extrai número do campo "Quarto", mesmo que contenha texto (ex: "UH23")
+            numeros = re.findall(r"\d+", str(valor))
+            valor = int(numeros[0]) if numeros else 0
+
+        mapeado[id_campo] = valor
 
     return mapeado
+
+
 
 
 def registrar_os(dados):
