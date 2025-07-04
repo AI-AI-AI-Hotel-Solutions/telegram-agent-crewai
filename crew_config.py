@@ -1,6 +1,7 @@
 from crewai import Crew, Agent, Task
 from baserow_handler import executar_acao
 from openai_config import setup_openai
+from openai_config import normalizar_formato
 import json
 
 setup_openai()
@@ -122,7 +123,8 @@ crew = Crew(
 # Função principal do sistema
 def process_message(text):
     try:
-        resultado = crew.kickoff(inputs={"input": text})
+        texto_formatado = normalizar_formato(text)
+        resultado = crew.kickoff(inputs={"input": texto_formatado})
         return resultado if isinstance(resultado, str) else str(resultado)
     except Exception as e:
         return f"[Erro interno]\n{type(e).__name__}: {e}"
