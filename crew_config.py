@@ -5,6 +5,14 @@ import json
 
 setup_openai()
 
+# Agente que normaliza comandos em linguagem natural para o formato ideal
+normalizador = Agent(
+    role="Normalizador de OS",
+    goal="Transformar mensagens desorganizadas em um formato ideal para interpretação",
+    backstory="Especialista em reescrever pedidos livres em uma estrutura compreensível e padronizada para o sistema de OS.",
+    verbose=True
+)
+
 # Agente que interpreta comandos em linguagem natural
 comandante = Agent(
     role="Comandante de OS",
@@ -20,6 +28,22 @@ executor = Agent(
     backstory="Responsável por registrar, consultar, editar ou excluir OS conforme os dados extraídos pelo Comandante.",
     verbose=True,
     tools=[executar_acao]  # Importante: esta é a ferramenta utilizada na task_execucao
+)
+
+# Task 0 — normalização da linguagem
+task_normalizacao = Task(
+    description="""
+Reescreva a mensagem abaixo no seguinte formato padronizado para facilitar o entendimento posterior:
+
+"Registrar uma nova OS de [tipo de serviço] para o hóspede [nome ou nomes], no quarto [número], no dia [data] às [horário].\nOs detalhes são: [detalhes do pedido]. Ele é [prioridade opcional]."
+
+Se faltar alguma informação, substitua por '---'.
+
+Mensagem original:
+{input}
+""",
+    expected_output="Mensagem reescrita no formato ideal para extração.",
+    agent=normalizador
 )
 
 # Task 1 — interpretação
@@ -96,12 +120,11 @@ Se identificar que o hóspede é "cliente habitual" ou "cliente habitue", defina
 
 Agora processe a seguinte mensagem:
 {input}
-
 """,
     expected_output="Um JSON no formato especificado contendo a ação e os dados.",
-    agent=comandante
+    agent=comandante,
+    input_key="output"  # recebe o texto normalizado da etapa anterior
 )
-
 
 # Task 2 — execução da ação com o JSON gerado
 task_execucao = Task(
@@ -114,8 +137,8 @@ task_execucao = Task(
 
 # Orquestração da Crew
 crew = Crew(
-    agents=[comandante, executor],
-    tasks=[task_comando, task_execucao],
+    agents=[normalizador, comandante, executor],
+    tasks=[task_normalizacao, task_comando, task_execucao],
     process="sequential"
 )
 
