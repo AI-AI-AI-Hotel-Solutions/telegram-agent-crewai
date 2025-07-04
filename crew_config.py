@@ -1,7 +1,6 @@
 from crewai import Crew, Agent, Task
 from baserow_handler import executar_acao
 from openai_config import setup_openai
-from openai_config import normalizar_formato
 import json
 
 setup_openai()
