@@ -22,7 +22,18 @@ FIELD_MAP = {
     "Horário do Serviço": "field_4761414",
     "Tipo de Serviço": "field_4761415",
     "Detalhes do Pedido": "field_4761417",
-    "Prioridade": "field_4761418"
+    "Prioridade": "field_4761418",
+    "Departamentos": "field_4820649"
+}
+
+# IDs dos departamentos
+DEPARTAMENTOS = {
+    "Concierge": 3657472,
+    "Recepção": 3657473,
+    "Bar": 3657474,
+    "Salão": 3657475,
+    "Cozinha": 3657476,
+    "Governança": 3657477
 }
 
 # Sinônimos aceitos para campos
@@ -40,7 +51,7 @@ def prioridade_para_id(texto):
         "atenção": 3616251,
         "vip": 3616251,
         "cliente vip": 3616251,
-        "cliente habitue": 3641220, 
+        "cliente habitue": 3641220,
         "cliente habitual": 3641220
     }
     return mapa.get(texto, 3616249)
@@ -62,6 +73,19 @@ def normalizar_data(data):
         return str(data)
     except:
         return str(data)
+
+def inferir_departamentos(dados):
+    texto = f"{dados.get('Tipo de Serviço', '')} {dados.get('Detalhes do Pedido', '')}".lower()
+    deps = {"Concierge", "Recepção"}
+    if any(palavra in texto for palavra in ["bolo", "comida", "menu", "café", "jantar", "almoço", "sobremesa"]):
+        deps.update(["Cozinha", "Salão"])
+    if any(palavra in texto for palavra in ["vinho", "drink", "coquetel", "bebida"]):
+        deps.update(["Bar", "Salão"])
+    if any(palavra in texto for palavra in ["servir", "serviço", "garçom"]):
+        deps.add("Salão")
+    if any(palavra in texto for palavra in ["decoração", "decorar", "arrumar", "flores"]):
+        deps.add("Governança")
+    return [DEPARTAMENTOS[d] for d in deps]
 
 def mapear_campos(dados: dict) -> dict:
     mapeado = {}
@@ -98,6 +122,9 @@ def mapear_campos(dados: dict) -> dict:
             valor = int(numeros[0]) if numeros else 0
 
         mapeado[id_campo] = valor
+
+    # Adiciona campo Departamentos baseado no conteúdo
+    mapeado[FIELD_MAP["Departamentos"]] = inferir_departamentos(dados)
 
     return mapeado
 
