@@ -8,11 +8,11 @@ def start_scheduler():
     scheduler.add_job(
         enviar_relatorio_diario,
         trigger="cron",
-        hour=3,
-        minute=23,
+        hour=4,
+        minute=27,
         id="relatorio_diario",
-        name="Enviar relatório diário às 03:23"
+        name="Enviar relatório diário às 04:27"
     )
 
     scheduler.start()
-    print(f"[{datetime.now()}] ⏰ Agendador iniciado - relatório diário será enviado às 03:23")
+    print(f"[{datetime.now()}] ⏰ Agendador iniciado - relatório diário será enviado às 04:27")
