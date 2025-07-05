@@ -1,7 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from baserow_handler import enviar_relatorio_diario
-import time
 
 def start_scheduler():
     scheduler = BackgroundScheduler(timezone="America/Sao_Paulo")
