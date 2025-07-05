@@ -361,7 +361,7 @@ def enviar_relatorio_diario():
                 if nome_dep:
                     grupos_mensagens[nome_dep].append(categoria)
 
-        # Envia por grupo — mesmo que vazio
+               # Envia por grupo — mesmo que vazio
         for nome_dep, mensagens in grupos_mensagens.items():
             corpo = f"📋 OS DOS PRÓXIMOS 7 DIAS - {data_hoje_fmt}\n\n"
             if mensagens:
@@ -370,7 +370,8 @@ def enviar_relatorio_diario():
                 corpo += "✅ Nenhuma OS nos próximos 7 dias."
             enviar_mensagem_telegram(GRUPOS_TELEGRAM[nome_dep], corpo)
 
-     return f"Mensagens enviadas para {sum(bool(m) for m in grupos_mensagens.values())} departamentos."
+        return f"Mensagens enviadas para {sum(bool(m) for m in grupos_mensagens.values())} departamentos."
 
     except Exception as e:
         print(f"Erro ao gerar relatório diário: {e}")
+
