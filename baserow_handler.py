@@ -373,3 +373,4 @@ def enviar_relatorio_diario():
     except Exception as e:
         print(f"Erro ao gerar relatório diário: {e}")
 
+return f"Mensagens enviadas para {sum(bool(m) for m in grupos_mensagens.values())} departamentos."
