@@ -3,7 +3,7 @@ from flask import Flask, request
 import requests
 import traceback
 from crew_config import process_message
-from baserow_handler import enviar_relatorio_diario  # Import correto
+import baserow_handler
 
 TOKEN = '7504265835:AAGkAEHaMmBW59SlfQ0ga9XuUF-lsx83zRU'
 TELEGRAM_URL = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
@@ -13,7 +13,7 @@ app = Flask(__name__)
 @app.route('/executar-relatorio', methods=['GET'])
 def executar_relatorio():
     try:
-        enviar_relatorio_diario()
+        baserow_handler.enviar_relatorio_diario()
         return '✅ Relatório enviado com sucesso!', 200
     except Exception as e:
         return f'❌ Erro ao enviar relatório: {e}', 500
