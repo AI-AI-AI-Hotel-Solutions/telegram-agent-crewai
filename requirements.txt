@@ -3,3 +3,4 @@ requests
 openai
 crewai
 crewai-tools
+apscheduler
