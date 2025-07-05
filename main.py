@@ -13,8 +13,8 @@ app = Flask(__name__)
 @app.route('/executar-relatorio', methods=['GET'])
 def executar_relatorio():
     try:
-        baserow_handler.enviar_relatorio_diario()
-        return '✅ Relatório enviado com sucesso!', 200
+        resultado = baserow_handler.enviar_relatorio_diario()
+        return f'✅ Relatório enviado com sucesso!\n\n{resultado}', 200
     except Exception as e:
         return f'❌ Erro ao enviar relatório: {e}', 500
 
@@ -38,13 +38,15 @@ def webhook():
         reply = f"[Erro interno]\n{type(e).__name__}: {e}\n\n{traceback.format_exc()}"
 
     try:
-        requests.post(TELEGRAM_URL, json={'chat_id': chat_id, 'text': reply})
+        r = requests.post(TELEGRAM_URL, json={'chat_id': chat_id, 'text': reply})
+        if r.status_code != 200:
+            print(f"❌ Falha ao enviar para Telegram ({chat_id}): {r.status_code} - {r.text}")
     except Exception as e:
         print("[Erro ao enviar resposta para o Telegram]", e)
 
     return '', 200
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  # ← Mantém porta da Render
+    port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
 
