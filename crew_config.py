@@ -33,16 +33,26 @@ executor = Agent(
 # Task 0 — normalização da linguagem
 task_normalizacao = Task(
     description="""
-Reescreva a mensagem abaixo no seguinte formato padronizado para facilitar o entendimento posterior:
+Você deve analisar a mensagem abaixo e reescrevê-la em um dos formatos estruturados a seguir, conforme o tipo de ação detectada (registrar, consultar, editar ou excluir OS).
 
-"Registrar uma nova OS de [tipo de serviço] para o hóspede [nome ou nomes], no quarto [número], no dia [data] às [horário].\nOs detalhes são: [detalhes do pedido]. Ele é [prioridade opcional]."
+🔹 **Se for um registro**, use:
+"Registrar uma nova OS de [tipo de serviço] para o hóspede [nome ou nomes], no quarto [número], no dia [data] às [horário]. Os detalhes são: [detalhes do pedido]. Ele é [prioridade opcional]."
 
-Se faltar alguma informação, substitua por '---'.
+🔹 **Se for uma consulta**, use:
+"Consultar OS do hóspede [nome ou nomes], no quarto [número], no dia [data]."
+
+🔹 **Se for uma edição**, use:
+"Editar OS do hóspede [nome ou nomes], no quarto [número], no dia [data], atualizando para: [novos dados]."
+
+🔹 **Se for uma exclusão**, use:
+"Excluir OS do hóspede [nome ou nomes], no quarto [número], no dia [data]."
+
+📌 Caso alguma informação esteja ausente na mensagem original, substitua por `'---'`.
 
 Mensagem original:
 {input}
 """,
-    expected_output="Mensagem reescrita no formato ideal para extração.",
+    expected_output="Mensagem reescrita em formato padronizado e estruturado para extração.",
     agent=normalizador
 )
 
