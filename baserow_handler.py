@@ -312,63 +312,11 @@ def formatar_os_item(os, idx):
   📝 Detalhes: {detalhes}"""
 
 def enviar_relatorio_diario():
-    hoje = datetime.date.today()
-    fim = hoje + datetime.timedelta(days=7)
-
-    print(f"[{datetime.datetime.now()}] 🚀 Iniciando geração do relatório ({hoje} até {fim})")
-
     try:
-        response = requests.get(BASE_URL, headers=HEADERS)
-        print(f"🔍 Status Baserow: {response.status_code}")
-        if response.status_code != 200:
-            print(f"❌ Erro ao buscar OS: {response.status_code}")
-            return
-
-        dados = response.json().get("results", [])
-        print(f"📦 OS encontradas: {len(dados)}")
-        grupos_mensagens = {nome: [] for nome in GRUPOS_TELEGRAM}
-        data_hoje_fmt = hoje.strftime("%d/%m/%Y")
-
-        for idx, os in enumerate(dados, 1):
-            data_str = os.get(ID_CAMPO_DATA_SERVICO)
-            if not data_str:
-                continue
-
-            try:
-                data_os = datetime.date.fromisoformat(data_str)
-            except:
-                continue
-
-            if data_os < hoje or data_os > fim:
-                continue
-
-            os_txt = formatar_os_item(os, idx)
-            dia_fmt = data_os.strftime("%d/%m/%Y")
-
-            if data_os == hoje:
-                categoria = f"🔴 HOJE\n{os_txt}"
-            elif data_os == hoje + datetime.timedelta(days=1):
-                categoria = f"🟡 AMANHÃ\n{os_txt}"
-            else:
-                categoria = f"🟢 {dia_fmt}\n{os_txt}"
-
-            deps = os.get(ID_CAMPO_DEPARTAMENTOS, [])
-            for dep_id in deps:
-                nome_dep = OPCOES_DEPARTAMENTOS.get(dep_id)
-                if nome_dep:
-                    grupos_mensagens[nome_dep].append(categoria)
-
-        # ⬅️ Este bloco estava mal indentado
-        for nome_dep, mensagens in grupos_mensagens.items():
-            corpo = f"📋 OS DOS PRÓXIMOS 7 DIAS - {data_hoje_fmt}\n\n"
-            if mensagens:
-                corpo += "\n\n".join(mensagens)
-            else:
-                corpo += "✅ Nenhuma OS nos próximos 7 dias."
-            enviar_mensagem_telegram(GRUPOS_TELEGRAM[nome_dep], corpo)
-
-        return f"Mensagens enviadas para {sum(bool(m) for m in grupos_mensagens.values())} departamentos."
-
+        print("📌 Função `enviar_relatorio_diario` foi chamada com sucesso.")
+        enviar_mensagem_telegram(-4962953534, "🚀 Teste: o endpoint está funcionando.")
+        return "✅ Função executada e mensagem enviada."
     except Exception as e:
-        print(f"Erro ao gerar relatório diário: {e}")
+        print(f"❌ Erro interno: {e}")
+        return f"❌ Erro: {e}"
 
