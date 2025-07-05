@@ -259,8 +259,6 @@ def executar_acao(json_resultado: dict) -> str:
 
 # coisas novas referente a agendamento
 
-import datetime
-import requests
 
 TELEGRAM_TOKEN = "7504265835:AAGkAEHaMmBW59SlfQ0ga9XuUF-lsx83zRU"  # Substitua pelo token do seu bot
 GRUPOS_TELEGRAM = {
@@ -324,10 +322,6 @@ def enviar_relatorio_diario():
             return
 
         dados = response.json().get("results", [])
-        if not dados:
-            print("Nenhuma OS encontrada.")
-            return
-
         grupos_mensagens = {nome: [] for nome in GRUPOS_TELEGRAM}
         data_hoje_fmt = hoje.strftime("%d/%m/%Y")
 
@@ -363,11 +357,14 @@ def enviar_relatorio_diario():
                 if nome_dep:
                     grupos_mensagens[nome_dep].append(categoria)
 
-        # Envia por grupo
+        # Envia por grupo — mesmo que vazio
         for nome_dep, mensagens in grupos_mensagens.items():
+            corpo = f"📋 OS DOS PRÓXIMOS 7 DIAS - {data_hoje_fmt}\n\n"
             if mensagens:
-                corpo = f"📋 OS DOS PRÓXIMOS 7 DIAS - {data_hoje_fmt}\n\n" + "\n\n".join(mensagens)
-                enviar_mensagem_telegram(GRUPOS_TELEGRAM[nome_dep], corpo)
+                corpo += "\n\n".join(mensagens)
+            else:
+                corpo += "✅ Nenhuma OS nos próximos 7 dias."
+            enviar_mensagem_telegram(GRUPOS_TELEGRAM[nome_dep], corpo)
 
     except Exception as e:
         print(f"Erro ao gerar relatório diário: {e}")
