@@ -317,7 +317,6 @@ def enviar_relatorio_diario():
     hoje = datetime.date.today()
     fim = hoje + datetime.timedelta(days=7)
 
-    from baserow_handler import BASE_URL, HEADERS
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
         if response.status_code != 200:
@@ -325,12 +324,18 @@ def enviar_relatorio_diario():
             return
 
         dados = response.json().get("results", [])
-        relatorio = {"hoje": [], "amanha": [], "proximos": []}
+        if not dados:
+            print("Nenhuma OS encontrada.")
+            return
+
+        grupos_mensagens = {nome: [] for nome in GRUPOS_TELEGRAM}
+        data_hoje_fmt = hoje.strftime("%d/%m/%Y")
 
         for idx, os in enumerate(dados, 1):
             data_str = os.get(ID_CAMPO_DATA_SERVICO)
             if not data_str:
                 continue
+
             try:
                 data_os = datetime.date.fromisoformat(data_str)
             except:
@@ -339,50 +344,29 @@ def enviar_relatorio_diario():
             if data_os < hoje or data_os > fim:
                 continue
 
-            item_formatado = formatar_os_item(os, idx)
+            # Formata OS
+            os_txt = formatar_os_item(os, idx)
+            dia_fmt = data_os.strftime("%d/%m/%Y")
+
+            # Categoria temporal
             if data_os == hoje:
-                relatorio["hoje"].append(item_formatado)
+                categoria = f"🔴 HOJE\n{os_txt}"
             elif data_os == hoje + datetime.timedelta(days=1):
-                relatorio["amanha"].append(item_formatado)
+                categoria = f"🟡 AMANHÃ\n{os_txt}"
             else:
-                relatorio["proximos"].append((data_os, item_formatado))
+                categoria = f"🟢 {dia_fmt}\n{os_txt}"
 
-        # Agrupar por departamento
-        grupos_mensagens = {nome: [] for nome in GRUPOS_TELEGRAM}
-        for tipo, lista in relatorio.items():
-            cabecalho = f"\n\n{'🔴 HOJE' if tipo=='hoje' else '🟡 AMANHÃ' if tipo=='amanha' else '🟢 PRÓXIMOS DIAS'}\n"
-            if tipo == "proximos":
-                lista.sort(key=lambda x: x[0])
-                agrupado = {}
-                for data, texto in lista:
-                    agrupado.setdefault(data, []).append(texto)
-                for data, textos in agrupado.items():
-                    dia_fmt = data.strftime("%d/%m/%Y")
-                    bloco = f"Dia {dia_fmt}\n" + "\n".join(textos)
-                    for os_texto in textos:
-                        os_obj = next((o for o in dados if os_texto in formatar_os_item(o, dados.index(o)+1)), None)
-                        if os_obj:
-                            deps = os_obj.get(ID_CAMPO_DEPARTAMENTOS, [])
-                            for dep_id in deps:
-                                nome_dep = OPCOES_DEPARTAMENTOS.get(dep_id)
-                                if nome_dep:
-                                    grupos_mensagens[nome_dep].append(bloco)
-            else:
-                textos = lista or ["✅ Nenhuma OS"]
-                bloco = cabecalho + "\n".join(textos)
-                for texto in textos:
-                    os_obj = next((o for o in dados if texto in formatar_os_item(o, dados.index(o)+1)), None)
-                    if os_obj:
-                        deps = os_obj.get(ID_CAMPO_DEPARTAMENTOS, [])
-                        for dep_id in deps:
-                            nome_dep = OPCOES_DEPARTAMENTOS.get(dep_id)
-                            if nome_dep:
-                                grupos_mensagens[nome_dep].append(bloco)
+            # Departamentos envolvidos
+            deps = os.get(ID_CAMPO_DEPARTAMENTOS, [])
+            for dep_id in deps:
+                nome_dep = OPCOES_DEPARTAMENTOS.get(dep_id)
+                if nome_dep:
+                    grupos_mensagens[nome_dep].append(categoria)
 
-        data_hoje_fmt = hoje.strftime("%d/%m/%Y")
-        for nome_dep, textos in grupos_mensagens.items():
-            if textos:
-                corpo = f"📋 OS DOS PRÓXIMOS 7 DIAS - {data_hoje_fmt}\n" + "\n".join(set(textos))
+        # Envia por grupo
+        for nome_dep, mensagens in grupos_mensagens.items():
+            if mensagens:
+                corpo = f"📋 OS DOS PRÓXIMOS 7 DIAS - {data_hoje_fmt}\n\n" + "\n\n".join(mensagens)
                 enviar_mensagem_telegram(GRUPOS_TELEGRAM[nome_dep], corpo)
 
     except Exception as e:
