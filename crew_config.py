@@ -37,24 +37,27 @@ Você deve analisar a mensagem abaixo e reescrevê-la em um dos formatos estrutu
 
 🔹 **Se for um registro**, use:
 "Registrar uma nova OS de [tipo de serviço] para o hóspede [nome ou nomes], no quarto [número], no dia [data] às [horário]. Os detalhes são: [detalhes do pedido]. Ele é [prioridade opcional]."
+(Campos ausentes podem ser preenchidos com '---')
 
 🔹 **Se for uma consulta**, use:
-"Consultar OS do hóspede [nome ou nomes], no quarto [número], no dia [data]."
+"Consultar OS do hóspede [nome ou nomes]" ou, se souber mais detalhes, complemente com "no quarto [número]", "no dia [data]", etc.
+(Não inclua campos com '---' — simplesmente omita)
 
 🔹 **Se for uma edição**, use:
 "Editar OS do hóspede [nome ou nomes], no quarto [número], no dia [data], atualizando para: [novos dados]."
+(Novamente, omita campos que não estejam claros)
 
 🔹 **Se for uma exclusão**, use:
 "Excluir OS do hóspede [nome ou nomes], no quarto [número], no dia [data]."
-
-📌 Caso alguma informação esteja ausente na mensagem original, substitua por `'---'`.
+(Sem campos com '---', apenas os que estiverem presentes)
 
 Mensagem original:
 {input}
 """,
-    expected_output="Mensagem reescrita em formato padronizado e estruturado para extração.",
+    expected_output="Mensagem padronizada e sem campos fictícios ('---') para evitar falsos filtros.",
     agent=normalizador
 )
+
 
 # Task 1 — interpretação
 task_comando = Task(
