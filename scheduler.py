@@ -10,13 +10,13 @@ def start_scheduler():
         enviar_relatorio_diario,
         trigger="cron",
         hour=2,
-        minute=15,
+        minute=30,
         id="relatorio_diario",
-        name="Enviar relatório diário às 02:15"
+        name="Enviar relatório diário às 02:30"
     )
 
     scheduler.start()
-    print(f"[{datetime.now()}] ⏰ Agendador iniciado - relatório diário será enviado às 02:15")
+    print(f"[{datetime.now()}] ⏰ Agendador iniciado - relatório diário será enviado às 02:30")
 
     try:
         while True:
