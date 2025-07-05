@@ -370,7 +370,7 @@ def enviar_relatorio_diario():
                 corpo += "✅ Nenhuma OS nos próximos 7 dias."
             enviar_mensagem_telegram(GRUPOS_TELEGRAM[nome_dep], corpo)
 
+     return f"Mensagens enviadas para {sum(bool(m) for m in grupos_mensagens.values())} departamentos."
+
     except Exception as e:
         print(f"Erro ao gerar relatório diário: {e}")
-
-return f"Mensagens enviadas para {sum(bool(m) for m in grupos_mensagens.values())} departamentos."
