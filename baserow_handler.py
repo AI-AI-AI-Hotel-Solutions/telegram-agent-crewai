@@ -289,23 +289,6 @@ GRUPOS_TELEGRAM = {
     "Governança": -4957904992,
 }
 
-ID_CAMPO_DATA_SERVICO = "field_4761412"
-ID_CAMPO_DEPARTAMENTOS = "field_4820649"
-ID_CAMPO_HOSPEDE = "field_4761406"
-ID_CAMPO_QUARTO = "field_4761407"
-ID_CAMPO_PRIORIDADE = "field_4761418"
-ID_CAMPO_HORARIO = "field_4761414"
-ID_CAMPO_SERVICO = "field_4761415"
-ID_CAMPO_DETALHES = "field_4761417"
-
-OPCOES_DEPARTAMENTOS = {
-    3657472: "Concierge",
-    3657473: "Recepção",
-    3657474: "Bar",
-    3657475: "Salão",
-    3657476: "Cozinha",
-    3657477: "Governança",
-}
 
 def enviar_mensagem_telegram(chat_id, texto):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -321,18 +304,18 @@ def enviar_mensagem_telegram(chat_id, texto):
     except Exception as e:
         print(f"❌ Erro ao enviar para {chat_id}: {e}")
 
-
 def formatar_os_item(os, idx):
-    hospede = os.get(ID_CAMPO_HOSPEDE, "---")
-    quarto = os.get(ID_CAMPO_QUARTO, "---")
-    prioridade = os.get(ID_CAMPO_PRIORIDADE, {}).get("value", "Normal")
-    horario = os.get(ID_CAMPO_HORARIO, "---")
-    servico = os.get(ID_CAMPO_SERVICO, "---")
-    detalhes = os.get(ID_CAMPO_DETALHES, "---")
+    hospede = os.get(FIELD_MAP["Nome do Hóspede"], "---")
+    quarto = os.get(FIELD_MAP["Quarto"], "---")
+    prioridade = os.get(FIELD_MAP["Prioridade"], {}).get("value", "Normal")
+    horario = os.get(FIELD_MAP["Horário do Serviço"], "---")
+    servico = os.get(FIELD_MAP["Tipo de Serviço"], "---")
+    detalhes = os.get(FIELD_MAP["Detalhes do Pedido"], "---")
+    data_servico = os.get(FIELD_MAP["Data do Serviço"], "---")
 
     return f"""🔖 OS-{idx:03} - Hóspedes: {hospede} - SUÍTE UH {quarto}
   ⚡ {prioridade.upper()}
-  📅 {os.get(ID_CAMPO_DATA_SERVICO, '---')}
+  📅 {data_servico}
   ⏰ {horario}
   🎯 Serviço: {servico}
   📝 Detalhes: {detalhes}"""
@@ -358,7 +341,7 @@ def enviar_relatorio_diario():
         data_hoje_fmt = hoje.strftime("%d/%m/%Y")
 
         for idx, os in enumerate(dados, 1):
-            data_str = os.get(ID_CAMPO_DATA_SERVICO)
+            data_str = os.get(FIELD_MAP["Data do Serviço"])
             if not data_str:
                 continue
 
@@ -381,25 +364,20 @@ def enviar_relatorio_diario():
             else:
                 categoria = f"🟢 {dia_fmt}\n{os_txt}"
 
-            deps = os.get(ID_CAMPO_DEPARTAMENTOS, [])
+            deps = os.get(FIELD_MAP["Departamentos"], [])
             print(f"🧪 OS-{idx:03} Departamentos: {deps}")
 
             for dep in deps:
-                if isinstance(dep, dict):
-                    dep_id = dep.get("id")
-                else:
-                    dep_id = dep
-                nome_dep = OPCOES_DEPARTAMENTOS.get(dep_id)
+                dep_id = dep.get("id") if isinstance(dep, dict) else dep
+                nome_dep = next((k for k, v in DEPARTAMENTOS.items() if v == dep_id), None)
                 if nome_dep:
                     grupos_mensagens[nome_dep].append(categoria)
 
         total_enviados = 0
         for nome_dep, mensagens in grupos_mensagens.items():
             corpo = f"📋 OS DOS PRÓXIMOS 7 DIAS - {data_hoje_fmt}\n\n"
-            if mensagens:
-                corpo += "\n\n".join(mensagens)
-            else:
-                corpo += "✅ Nenhuma OS nos próximos 7 dias."
+            corpo += "\n\n".join(mensagens) if mensagens else "✅ Nenhuma OS nos próximos 7 dias."
+
             chat_id = GRUPOS_TELEGRAM[nome_dep]
             print(f"📨 Enviando para {nome_dep} ({chat_id})...")
             r = requests.post(
