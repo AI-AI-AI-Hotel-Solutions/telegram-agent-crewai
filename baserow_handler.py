@@ -165,6 +165,21 @@ def registrar_os(dados):
     except Exception as e:
         return f"❌ Erro na requisição: {e}"
 
+
+def corresponde(row, filtros):
+    for k, v in filtros.items():
+        valor_row = row.get(k)
+        if valor_row is None:
+            return False
+        if isinstance(valor_row, dict):
+            valor_row = valor_row.get("value", "")
+        if isinstance(v, dict):
+            v = v.get("value", v)
+        if str(valor_row).strip().lower() != str(v).strip().lower():
+            return False
+    return True
+
+
 def consultar_os(filtros):
     filtros = mapear_campos(filtros)
     try:
@@ -173,7 +188,7 @@ def consultar_os(filtros):
             dados = response.json()["results"]
             resultados = []
             for row in dados:
-                if all(str(row.get(k, "")).lower() == str(v).lower() for k, v in filtros.items()):
+                if corresponde(row, filtros):
                     resultados.append(row)
             return f"🔍 {len(resultados)} resultado(s):\n\n" + "\n\n".join(formatar_os(r) for r in resultados) if resultados else "Nenhuma OS encontrada."
         else:
@@ -181,21 +196,23 @@ def consultar_os(filtros):
     except Exception as e:
         return f"❌ Erro na consulta: {e}"
 
+
 def editar_os(criterios, novos_dados):
     criterios = mapear_campos(criterios)
     novos_dados = mapear_campos(novos_dados)
+    print(f"[✏️] Buscando OS para editar com critérios: {criterios}")
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
         if response.status_code == 200:
             rows = response.json()["results"]
             for row in rows:
-                if all(str(row.get(k, "")).lower() == str(v).lower() for k, v in criterios.items()):
+                if corresponde(row, criterios):
                     row_id = row["id"]
                     update_response = requests.patch(f"{BASE_URL}{row_id}/", headers=HEADERS, json=novos_dados)
                     if update_response.status_code == 200:
                         return "✏️ OS atualizada com sucesso."
                     else:
-                        return f"❌ Erro ao atualizar: {update_response.status_code}"
+                        return f"❌ Erro ao atualizar: {update_response.status_code} - {update_response.text}"
             return "OS não encontrada para edição."
         else:
             return f"❌ Erro na busca ({response.status_code})"
@@ -204,12 +221,13 @@ def editar_os(criterios, novos_dados):
 
 def excluir_os(criterios):
     criterios = mapear_campos(criterios)
+    print(f"[🧹] Tentando excluir com filtros: {criterios}")
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
         if response.status_code == 200:
             rows = response.json()["results"]
             for row in rows:
-                if all(str(row.get(k, "")).lower() == str(v).lower() for k, v in criterios.items()):
+                if corresponde(row, criterios):
                     row_id = row["id"]
                     delete_response = requests.delete(f"{BASE_URL}{row_id}/", headers=HEADERS)
                     if delete_response.status_code == 204:
@@ -221,6 +239,7 @@ def excluir_os(criterios):
             return f"❌ Erro ao buscar OS ({response.status_code})"
     except Exception as e:
         return f"❌ Erro na exclusão: {e}"
+
 
 @tool("Executar ação no Baserow")
 def executar_acao(json_resultado: dict) -> str:
