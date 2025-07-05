@@ -14,9 +14,10 @@ app = Flask(__name__)
 def executar_relatorio():
     try:
         resultado = baserow_handler.enviar_relatorio_diario()
-        return f'✅ Relatório enviado com sucesso!\n\n{resultado}', 200
+        return resultado or '✅ Relatório enviado com sucesso!', 200
     except Exception as e:
         return f'❌ Erro ao enviar relatório: {e}', 500
+
 
 @app.route('/', methods=['GET'])
 def home():
