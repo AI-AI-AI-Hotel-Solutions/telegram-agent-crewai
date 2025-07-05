@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request
 import requests
 import traceback
@@ -28,7 +29,6 @@ def webhook():
     except Exception as e:
         reply = f"[Erro interno]\n{type(e).__name__}: {e}\n\n{traceback.format_exc()}"
 
-    # Envia a resposta ao Telegram
     try:
         requests.post(TELEGRAM_URL, json={'chat_id': chat_id, 'text': reply})
     except Exception as e:
@@ -38,4 +38,5 @@ def webhook():
 
 if __name__ == '__main__':
     start_scheduler()
-    app.run(host='0.0.0.0', port=10000)
+    port = int(os.environ.get('PORT', 10000))  # ← Ponto chave
+    app.run(host='0.0.0.0', port=port)
