@@ -5,4 +5,8 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
     
-      
+  - type: worker
+    name: relatorio-diario
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scheduler.py
