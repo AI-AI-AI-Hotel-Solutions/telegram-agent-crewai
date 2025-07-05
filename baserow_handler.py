@@ -342,11 +342,9 @@ def enviar_relatorio_diario():
             if data_os < hoje or data_os > fim:
                 continue
 
-            # Formata OS
             os_txt = formatar_os_item(os, idx)
             dia_fmt = data_os.strftime("%d/%m/%Y")
 
-            # Categoria temporal
             if data_os == hoje:
                 categoria = f"🔴 HOJE\n{os_txt}"
             elif data_os == hoje + datetime.timedelta(days=1):
@@ -354,14 +352,13 @@ def enviar_relatorio_diario():
             else:
                 categoria = f"🟢 {dia_fmt}\n{os_txt}"
 
-            # Departamentos envolvidos
             deps = os.get(ID_CAMPO_DEPARTAMENTOS, [])
             for dep_id in deps:
                 nome_dep = OPCOES_DEPARTAMENTOS.get(dep_id)
                 if nome_dep:
                     grupos_mensagens[nome_dep].append(categoria)
 
-               # Envia por grupo — mesmo que vazio
+        # ⬅️ Este bloco estava mal indentado
         for nome_dep, mensagens in grupos_mensagens.items():
             corpo = f"📋 OS DOS PRÓXIMOS 7 DIAS - {data_hoje_fmt}\n\n"
             if mensagens:
