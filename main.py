@@ -2,6 +2,7 @@ from flask import Flask, request
 import requests
 import traceback
 from crew_config import process_message
+from scheduler import start_scheduler
 
 TOKEN = '7504265835:AAGkAEHaMmBW59SlfQ0ga9XuUF-lsx83zRU'
 TELEGRAM_URL = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
@@ -36,4 +37,5 @@ def webhook():
     return '', 200
 
 if __name__ == '__main__':
+    start_scheduler()
     app.run(host='0.0.0.0', port=10000)
