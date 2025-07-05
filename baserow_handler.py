@@ -256,3 +256,135 @@ def executar_acao(json_resultado: dict) -> str:
         return "❌ Ação inválida ou não suportada."
 
 
+
+# coisas novas referente a agendamento
+
+import datetime
+import requests
+
+TELEGRAM_TOKEN = "7504265835:AAGkAEHaMmBW59SlfQ0ga9XuUF-lsx83zRU"  # Substitua pelo token do seu bot
+GRUPOS_TELEGRAM = {
+    "Concierge": -4853736293,
+    "Recepção": -4962953534,
+    "Bar": -4790526640,
+    "Salão": -4951559297,
+    "Cozinha": -4810278204,
+    "Governança": -4957904992,
+}
+
+ID_CAMPO_DATA_SERVICO = "field_4761412"
+ID_CAMPO_DEPARTAMENTOS = "field_4820649"
+ID_CAMPO_HOSPEDE = "field_4761406"
+ID_CAMPO_QUARTO = "field_4761407"
+ID_CAMPO_PRIORIDADE = "field_4761418"
+ID_CAMPO_HORARIO = "field_4761414"
+ID_CAMPO_SERVICO = "field_4761415"
+ID_CAMPO_DETALHES = "field_4761417"
+
+OPCOES_DEPARTAMENTOS = {
+    3657472: "Concierge",
+    3657473: "Recepção",
+    3657474: "Bar",
+    3657475: "Salão",
+    3657476: "Cozinha",
+    3657477: "Governança",
+}
+
+def enviar_mensagem_telegram(chat_id, texto):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    payload = {"chat_id": chat_id, "text": texto, "parse_mode": "Markdown"}
+    try:
+        requests.post(url, json=payload)
+    except Exception as e:
+        print(f"Erro ao enviar para {chat_id}: {e}")
+
+def formatar_os_item(os, idx):
+    hospede = os.get(ID_CAMPO_HOSPEDE, "---")
+    quarto = os.get(ID_CAMPO_QUARTO, "---")
+    prioridade = os.get(ID_CAMPO_PRIORIDADE, {}).get("value", "Normal")
+    horario = os.get(ID_CAMPO_HORARIO, "---")
+    servico = os.get(ID_CAMPO_SERVICO, "---")
+    detalhes = os.get(ID_CAMPO_DETALHES, "---")
+
+    return f"""🔖 OS-{idx:03} - Hóspedes: {hospede} - SUÍTE UH {quarto}
+  ⚡ {prioridade.upper()}
+  📅 {os.get(ID_CAMPO_DATA_SERVICO, '---')}
+  ⏰ {horario}
+  🎯 Serviço: {servico}
+  📝 Detalhes: {detalhes}"""
+
+def enviar_relatorio_diario():
+    hoje = datetime.date.today()
+    fim = hoje + datetime.timedelta(days=7)
+
+    from baserow_handler import BASE_URL, HEADERS
+    try:
+        response = requests.get(BASE_URL, headers=HEADERS)
+        if response.status_code != 200:
+            print(f"Erro ao buscar OS: {response.status_code}")
+            return
+
+        dados = response.json().get("results", [])
+        relatorio = {"hoje": [], "amanha": [], "proximos": []}
+
+        for idx, os in enumerate(dados, 1):
+            data_str = os.get(ID_CAMPO_DATA_SERVICO)
+            if not data_str:
+                continue
+            try:
+                data_os = datetime.date.fromisoformat(data_str)
+            except:
+                continue
+
+            if data_os < hoje or data_os > fim:
+                continue
+
+            item_formatado = formatar_os_item(os, idx)
+            if data_os == hoje:
+                relatorio["hoje"].append(item_formatado)
+            elif data_os == hoje + datetime.timedelta(days=1):
+                relatorio["amanha"].append(item_formatado)
+            else:
+                relatorio["proximos"].append((data_os, item_formatado))
+
+        # Agrupar por departamento
+        grupos_mensagens = {nome: [] for nome in GRUPOS_TELEGRAM}
+        for tipo, lista in relatorio.items():
+            cabecalho = f"\n\n{'🔴 HOJE' if tipo=='hoje' else '🟡 AMANHÃ' if tipo=='amanha' else '🟢 PRÓXIMOS DIAS'}\n"
+            if tipo == "proximos":
+                lista.sort(key=lambda x: x[0])
+                agrupado = {}
+                for data, texto in lista:
+                    agrupado.setdefault(data, []).append(texto)
+                for data, textos in agrupado.items():
+                    dia_fmt = data.strftime("%d/%m/%Y")
+                    bloco = f"Dia {dia_fmt}\n" + "\n".join(textos)
+                    for os_texto in textos:
+                        os_obj = next((o for o in dados if os_texto in formatar_os_item(o, dados.index(o)+1)), None)
+                        if os_obj:
+                            deps = os_obj.get(ID_CAMPO_DEPARTAMENTOS, [])
+                            for dep_id in deps:
+                                nome_dep = OPCOES_DEPARTAMENTOS.get(dep_id)
+                                if nome_dep:
+                                    grupos_mensagens[nome_dep].append(bloco)
+            else:
+                textos = lista or ["✅ Nenhuma OS"]
+                bloco = cabecalho + "\n".join(textos)
+                for texto in textos:
+                    os_obj = next((o for o in dados if texto in formatar_os_item(o, dados.index(o)+1)), None)
+                    if os_obj:
+                        deps = os_obj.get(ID_CAMPO_DEPARTAMENTOS, [])
+                        for dep_id in deps:
+                            nome_dep = OPCOES_DEPARTAMENTOS.get(dep_id)
+                            if nome_dep:
+                                grupos_mensagens[nome_dep].append(bloco)
+
+        data_hoje_fmt = hoje.strftime("%d/%m/%Y")
+        for nome_dep, textos in grupos_mensagens.items():
+            if textos:
+                corpo = f"📋 OS DOS PRÓXIMOS 7 DIAS - {data_hoje_fmt}\n" + "\n".join(set(textos))
+                enviar_mensagem_telegram(GRUPOS_TELEGRAM[nome_dep], corpo)
+
+    except Exception as e:
+        print(f"Erro ao gerar relatório diário: {e}")
+
