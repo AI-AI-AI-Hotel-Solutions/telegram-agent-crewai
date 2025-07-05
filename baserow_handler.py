@@ -305,13 +305,13 @@ def enviar_mensagem_telegram(chat_id, texto):
         print(f"❌ Erro ao enviar para {chat_id}: {e}")
 
 def formatar_os_item(os, idx):
-    hospede = os.get(FIELD_MAP["Nome do Hóspede"], "---")
-    quarto = os.get(FIELD_MAP["Quarto"], "---")
+    hospede = os.get(FIELD_MAP["Nome do Hóspede"], "")
+    quarto = os.get(FIELD_MAP["Quarto"], "")
     prioridade = os.get(FIELD_MAP["Prioridade"], {}).get("value", "Normal")
-    horario = os.get(FIELD_MAP["Horário do Serviço"], "---")
-    servico = os.get(FIELD_MAP["Tipo de Serviço"], "---")
-    detalhes = os.get(FIELD_MAP["Detalhes do Pedido"], "---")
-    data_servico = os.get(FIELD_MAP["Data do Serviço"], "---")
+    horario = os.get(FIELD_MAP["Horário do Serviço"], "")
+    servico = os.get(FIELD_MAP["Tipo de Serviço"], "")
+    detalhes = os.get(FIELD_MAP["Detalhes do Pedido"], "")
+    data_servico = os.get(FIELD_MAP["Data do Serviço"], "")
 
     return f"""🔖 OS-{idx:03} - Hóspedes: {hospede} - SUÍTE UH {quarto}
   ⚡ {prioridade.upper()}
