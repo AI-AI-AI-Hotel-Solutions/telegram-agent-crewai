@@ -315,13 +315,17 @@ def enviar_relatorio_diario():
     hoje = datetime.date.today()
     fim = hoje + datetime.timedelta(days=7)
 
+    print(f"[{datetime.datetime.now()}] 🚀 Iniciando geração do relatório ({hoje} até {fim})")
+
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
+        print(f"🔍 Status Baserow: {response.status_code}")
         if response.status_code != 200:
-            print(f"Erro ao buscar OS: {response.status_code}")
+            print(f"❌ Erro ao buscar OS: {response.status_code}")
             return
 
         dados = response.json().get("results", [])
+        print(f"📦 OS encontradas: {len(dados)}")
         grupos_mensagens = {nome: [] for nome in GRUPOS_TELEGRAM}
         data_hoje_fmt = hoje.strftime("%d/%m/%Y")
 
