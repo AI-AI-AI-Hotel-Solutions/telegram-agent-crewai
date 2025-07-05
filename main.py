@@ -3,12 +3,20 @@ from flask import Flask, request
 import requests
 import traceback
 from crew_config import process_message
-from scheduler import start_scheduler
+from baserow_handler import enviar_relatorio_diario  # Import correto
 
 TOKEN = '7504265835:AAGkAEHaMmBW59SlfQ0ga9XuUF-lsx83zRU'
 TELEGRAM_URL = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
 
 app = Flask(__name__)
+
+@app.route('/executar-relatorio', methods=['GET'])
+def executar_relatorio():
+    try:
+        enviar_relatorio_diario()
+        return '✅ Relatório enviado com sucesso!', 200
+    except Exception as e:
+        return f'❌ Erro ao enviar relatório: {e}', 500
 
 @app.route('/', methods=['GET'])
 def home():
@@ -23,7 +31,7 @@ def webhook():
         text = message.get('text', '')
 
         if not text:
-            return '', 200  # Ignora mensagens sem texto
+            return '', 200
 
         reply = process_message(text)
     except Exception as e:
@@ -37,6 +45,6 @@ def webhook():
     return '', 200
 
 if __name__ == '__main__':
-    start_scheduler()
-    port = int(os.environ.get('PORT', 10000))  # ← Ponto chave
+    port = int(os.environ.get('PORT', 10000))  # ← Mantém porta da Render
     app.run(host='0.0.0.0', port=port)
+
