@@ -290,11 +290,18 @@ OPCOES_DEPARTAMENTOS = {
 
 def enviar_mensagem_telegram(chat_id, texto):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {"chat_id": chat_id, "text": texto, "parse_mode": "Markdown"}
+    payload = {
+        "chat_id": chat_id,
+        "text": texto,
+        "parse_mode": "Markdown"
+    }
     try:
-        requests.post(url, json=payload)
+        response = requests.post(url, json=payload)
+        print(f"📨 Status: {response.status_code} | Grupo: {chat_id}")
+        print(response.text)
     except Exception as e:
-        print(f"Erro ao enviar para {chat_id}: {e}")
+        print(f"❌ Erro ao enviar para {chat_id}: {e}")
+
 
 def formatar_os_item(os, idx):
     hospede = os.get(ID_CAMPO_HOSPEDE, "---")
