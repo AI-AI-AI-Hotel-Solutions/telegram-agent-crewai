@@ -145,8 +145,10 @@ task_execucao = Task(
     expected_output="Mensagem confirmando a ação ou listando resultados.",
     agent=executor,
     tool=executar_acao,
-    input_key="output"
+    input_key="output",
+    output_key="json_resultado"
 )
+
 
 # Orquestração da Crew
 crew = Crew(
