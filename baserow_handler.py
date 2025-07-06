@@ -2,6 +2,7 @@ import datetime
 import requests
 from crewai.tools import tool
 import re
+import unicodedata
 
 # Token e base do Baserow
 API_TOKEN = "XqIY4Ru5ELx2ifWKyFGfJVt0HPfEyyAP"
@@ -166,18 +167,37 @@ def registrar_os(dados):
         return f"❌ Erro na requisição: {e}"
 
 
+def normalizar_valor(valor):
+    if isinstance(valor, dict):
+        valor = valor.get("value", "")
+    elif isinstance(valor, list):
+        # Para listas (como Departamentos), transforma todos os itens em string normalizada
+        return [normalizar_valor(v) for v in valor]
+    return (
+        unicodedata.normalize("NFKD", str(valor).strip().lower())
+        .encode("ASCII", "ignore")
+        .decode("utf-8")
+    )
+
 def corresponde(row, filtros):
     for k, v in filtros.items():
         valor_row = row.get(k)
         if valor_row is None:
             return False
-        if isinstance(valor_row, dict):
-            valor_row = valor_row.get("value", "")
-        if isinstance(v, dict):
-            v = v.get("value", v)
-        if str(valor_row).strip().lower() != str(v).strip().lower():
-            return False
+        
+        valor_row_normalizado = normalizar_valor(valor_row)
+        valor_filtro_normalizado = normalizar_valor(v)
+
+        # Se for lista, verifica se há interseção
+        if isinstance(valor_row_normalizado, list):
+            if valor_filtro_normalizado not in valor_row_normalizado:
+                return False
+        else:
+            if str(valor_row_normalizado) != str(valor_filtro_normalizado):
+                return False
+
     return True
+
 
 
 def consultar_os(filtros):
