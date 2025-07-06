@@ -181,26 +181,25 @@ def corresponde(row, filtros):
 
 
 def consultar_os(filtros):
+    print(f"[🔍] Consultando OS com filtros: {filtros}")
     filtros = mapear_campos(filtros)
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
         if response.status_code == 200:
             dados = response.json()["results"]
-            resultados = []
-            for row in dados:
-                if corresponde(row, filtros):
-                    resultados.append(row)
-            return f"🔍 {len(resultados)} resultado(s):\n\n" + "\n\n".join(formatar_os(r) for r in resultados) if resultados else "Nenhuma OS encontrada."
+            resultados = [row for row in dados if corresponde(row, filtros)]
+            if resultados:
+                return f"🔍 {len(resultados)} resultado(s):\n\n" + "\n\n".join(formatar_os(r) for r in resultados)
+            return "Nenhuma OS encontrada."
         else:
             return f"❌ Erro ao consultar OS ({response.status_code})"
     except Exception as e:
         return f"❌ Erro na consulta: {e}"
 
-
 def editar_os(criterios, novos_dados):
+    print(f"[✏️] Buscando OS para editar com critérios: {criterios}")
     criterios = mapear_campos(criterios)
     novos_dados = mapear_campos(novos_dados)
-    print(f"[✏️] Buscando OS para editar com critérios: {criterios}")
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
         if response.status_code == 200:
@@ -220,8 +219,8 @@ def editar_os(criterios, novos_dados):
         return f"❌ Erro na edição: {e}"
 
 def excluir_os(criterios):
+    print(f"[🗑️] Buscando OS para exclusão com critérios: {criterios}")
     criterios = mapear_campos(criterios)
-    print(f"[🧹] Tentando excluir com filtros: {criterios}")
     try:
         response = requests.get(BASE_URL, headers=HEADERS)
         if response.status_code == 200:
@@ -233,7 +232,7 @@ def excluir_os(criterios):
                     if delete_response.status_code == 204:
                         return "🗑️ OS excluída com sucesso."
                     else:
-                        return f"❌ Erro ao excluir: {delete_response.status_code}"
+                        return f"❌ Erro ao excluir: {delete_response.status_code} - {delete_response.text}"
             return "OS não encontrada para exclusão."
         else:
             return f"❌ Erro ao buscar OS ({response.status_code})"
