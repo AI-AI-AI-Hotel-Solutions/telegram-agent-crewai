@@ -35,28 +35,28 @@ task_normalizacao = Task(
     description="""
 Você deve analisar a mensagem abaixo e reescrevê-la em um dos formatos estruturados a seguir, conforme o tipo de ação detectada (registrar, consultar, editar ou excluir OS).
 
+⚠️ IMPORTANTE: Use **apenas as informações que estiverem claramente mencionadas** na mensagem original. **Nunca invente ou preencha** campos como datas, horários, quartos ou detalhes se não forem informados.
+
 🔹 **Se for um registro**, use:
 "Registrar uma nova OS de [tipo de serviço] para o hóspede [nome ou nomes], no quarto [número], no dia [data] às [horário]. Os detalhes são: [detalhes do pedido]. Ele é [prioridade opcional]."
-(Campos ausentes podem ser preenchidos com '---')
 
-🔹 **Se for uma consulta**, use:
-"Consultar OS do hóspede [nome ou nomes]" ou, se souber mais detalhes, complemente com "no quarto [número]", "no dia [data]", etc.
-(Não inclua campos com '---' — simplesmente omita)
+🔹 **Se for uma consulta**, use apenas os dados presentes na mensagem original. Exemplo:
+"Consultar OS do hóspede [nome]"  
+Você pode incluir também "no quarto [número]", "no dia [data]", etc., **se e somente se forem informados**.
 
 🔹 **Se for uma edição**, use:
-"Editar OS do hóspede [nome ou nomes], no quarto [número], no dia [data], atualizando para: [novos dados]."
-(Novamente, omita campos que não estejam claros)
+"Editar OS do hóspede [nome ou nomes], no quarto [número], no dia [data], atualizando para: [novos dados informados]."
 
 🔹 **Se for uma exclusão**, use:
 "Excluir OS do hóspede [nome ou nomes], no quarto [número], no dia [data]."
-(Sem campos com '---', apenas os que estiverem presentes)
 
 Mensagem original:
 {input}
 """,
-    expected_output="Mensagem padronizada e sem campos fictícios ('---') para evitar falsos filtros.",
+    expected_output="Mensagem padronizada apenas com os dados mencionados explicitamente.",
     agent=normalizador
 )
+
 
 
 # Task 1 — interpretação
@@ -99,6 +99,19 @@ Saída:
 
 ---
 Entrada:
+"Consultar OS da hóspede Fernanda Reis no dia 5 de julho."
+
+Saída:
+{
+  "acao": "consultar",
+  "filtros": {
+    "Nome do Hóspede": "Fernanda Reis",
+    "Data do Serviço": "2025-07-05"
+  }
+}
+
+---
+Entrada:
 "Excluir o registro do hóspede João no quarto 5 com serviço de café da manhã"
 
 Saída:
@@ -129,15 +142,16 @@ Saída:
 
 ---
 Observação:
-Se identificar que o hóspede é "cliente habitual" ou "cliente habitue", defina o campo de "Prioridade" como "cliente habitue" e **não adicione o campo "Cliente Habitual".
+Se identificar que o hóspede é "cliente habitual" ou "cliente habitue", defina o campo "Prioridade" como `"cliente habitue"` e **não adicione** o campo `"Cliente Habitual"`.
 
 Agora processe a seguinte mensagem:
 {input}
 """,
-    expected_output="Um JSON no formato especificado contendo a ação e os dados.",
+    expected_output="Um JSON no formato especificado contendo a ação e os dados extraídos com exatidão.",
     agent=comandante,
-    input_key="output"  # recebe o texto normalizado da etapa anterior
+    input_key="output"
 )
+
 
 # Task 2 — execução da ação com o JSON gerado
 task_execucao = Task(
@@ -145,7 +159,7 @@ task_execucao = Task(
     expected_output="Mensagem confirmando a ação ou listando resultados.",
     agent=executor,
     tool=executar_acao,
-    input_key="output",
+    input={"json_resultado": "{output}"},
 )
 
 
