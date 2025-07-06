@@ -146,7 +146,6 @@ task_execucao = Task(
     agent=executor,
     tool=executar_acao,
     input_key="output",
-    output_key="json_resultado"
 )
 
 
