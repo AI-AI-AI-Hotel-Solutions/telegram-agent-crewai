@@ -180,21 +180,21 @@ def normalizar_valor(valor):
     )
 
 def corresponde(row, filtros):
-    for k, v in filtros.items():
-        valor_row = row.get(k)
+    for campo_legivel, valor_filtro in filtros.items():
+        field_id = FIELD_MAP.get(campo_legivel, campo_legivel)
+        valor_row = row.get(field_id)
+
         if valor_row is None:
             return False
-        
-        valor_row_normalizado = normalizar_valor(valor_row)
-        valor_filtro_normalizado = normalizar_valor(v)
 
-        # Se for lista, verifica se há interseção
-        if isinstance(valor_row_normalizado, list):
-            if valor_filtro_normalizado not in valor_row_normalizado:
-                return False
-        else:
-            if str(valor_row_normalizado) != str(valor_filtro_normalizado):
-                return False
+        if isinstance(valor_row, dict):
+            valor_row = valor_row.get("value", "")
+
+        if isinstance(valor_filtro, dict):
+            valor_filtro = valor_filtro.get("value", valor_filtro)
+
+        if str(valor_row).strip().lower() != str(valor_filtro).strip().lower():
+            return False
 
     return True
 
