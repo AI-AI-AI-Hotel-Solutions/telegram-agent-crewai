@@ -10,14 +10,6 @@ TELEGRAM_URL = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
 
 app = Flask(__name__)
 
-@app.route('/executar-relatorio', methods=['GET'])
-def executar_relatorio():
-    try:
-        resultado = baserow_handler.enviar_relatorio_diario()
-        return resultado or '✅ Relatório enviado com sucesso!', 200
-    except Exception as e:
-        return f'❌ Erro ao enviar relatório: {e}', 500
-
 
 @app.route('/', methods=['GET'])
 def home():
