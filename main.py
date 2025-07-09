@@ -4,7 +4,7 @@ import requests
 import traceback
 from crew_config import process_message
 
-TOKEN = '7504265835:AAGkAEHaMmBW59SlfQ0ga9XuUF-lsx83zRU'
+TOKEN = '7042542286:AAG-zWG2eYLkayXyoxICPckkbvqorcvDHJQ'
 TELEGRAM_URL = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
 
 app = Flask(__name__)
