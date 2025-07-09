@@ -5,8 +5,8 @@ import re
 import unicodedata
 
 # Token e base do Baserow
-API_TOKEN = "XqIY4Ru5ELx2ifWKyFGfJVt0HPfEyyAP"
-TABLE_ID = "589034"
+API_TOKEN = "GKCjjEjcTAQUNpgD9rc6O2VJGLqnKtjN"
+TABLE_ID = "593203"
 BASE_URL = f"https://api.baserow.io/api/database/rows/table/{TABLE_ID}/"
 HEADERS = {
     "Authorization": f"Token {API_TOKEN}",
@@ -15,26 +15,26 @@ HEADERS = {
 
 # Mapeamento dos campos legíveis para os field_xxx do Baserow
 FIELD_MAP = {
-    "Data/Hora": "field_4761397",
-    "E-mail Autor": "field_4761405",
-    "Nome do Hóspede": "field_4761406",
-    "Quarto": "field_4761407",
-    "Data do Serviço": "field_4761412",
-    "Horário do Serviço": "field_4761414",
-    "Tipo de Serviço": "field_4761415",
-    "Detalhes do Pedido": "field_4761417",
-    "Prioridade": "field_4761418",
-    "Departamentos": "field_4820649"
+    "Data/Hora": "field_4798728",
+    "E-mail Autor": "field_4798733",
+    "Nome do Hóspede": "field_4798734",
+    "Quarto": "field_4798740",
+    "Data do Serviço": "field_4798743",
+    "Horário do Serviço": "field_4798756",
+    "Tipo de Serviço": "field_4798778",
+    "Detalhes do Pedido": "field_4798779",
+    "Prioridade": "field_4798780",
+    "Departamentos": "field_4865800"
 }
 
 # IDs dos departamentos
 DEPARTAMENTOS = {
-    "Concierge": 3657472,
-    "Recepção": 3657473,
-    "Bar": 3657474,
-    "Salão": 3657475,
-    "Cozinha": 3657476,
-    "Governança": 3657477
+    "Concierge": 3681531,
+    "Recepção": 3681532,
+    "Bar": 3681533,
+    "Salão": 3681534,
+    "Cozinha": 3681535,
+    "Governança": 3681536
 }
 
 # Sinônimos aceitos para campos
@@ -47,15 +47,15 @@ ALIASES = {
 def prioridade_para_id(texto):
     texto = str(texto).strip().lower()
     mapa = {
-        "normal": 3616249,
-        "urgente": 3616250,
-        "atenção": 3616251,
-        "vip": 3616251,
-        "cliente vip": 3616251,
-        "cliente habitue": 3641220,
-        "cliente habitual": 3641220
+        "normal": 3681527,
+        "urgente": 3681528,
+        "atenção": 3681529,
+        "vip": 3681529,
+        "cliente vip": 3681529,
+        "cliente habitue": 3681530,
+        "cliente habitual": 3681530
     }
-    return mapa.get(texto, 3616249)
+    return mapa.get(texto, 3681527)
 
 def serializar_detalhes(detalhes):
     if isinstance(detalhes, dict):
@@ -130,10 +130,10 @@ def mapear_campos(dados: dict) -> dict:
     return mapeado
 
 def formatar_os(os: dict) -> str:
-    prioridade = os.get('field_4761418', {}).get('value', 'Normal')
-    detalhes = os.get('field_4761417', '')
-    data_servico = os.get('field_4761412', '---')
-    criado_em = os.get('field_4761397', '')
+    prioridade = os.get('field_4798780', {}).get('value', 'Normal')
+    detalhes = os.get('field_4798779', '')
+    data_servico = os.get('field_4798743', '---')
+    criado_em = os.get('field_4798728', '')
 
     try:
         criado_dt = datetime.datetime.fromisoformat(criado_em.replace("Z", "+00:00"))
@@ -142,13 +142,13 @@ def formatar_os(os: dict) -> str:
         criado_formatado = criado_em
 
     return f"""
-- Quarto: {os.get('field_4761407', '---')}
+- Quarto: {os.get('field_4798740', '---')}
 - Data do Serviço: {data_servico}
-- Horário: {os.get('field_4761414', '---')}
-- Tipo de Serviço: {os.get('field_4761415', '---')}
+- Horário: {os.get('field_4798756', '---')}
+- Tipo de Serviço: {os.get('field_4798778', '---')}
 - Detalhes do Pedido: {detalhes}
 - Prioridade: {prioridade}
-- Autor: {os.get('field_4761405', '---')}
+- Autor: {os.get('field_4798733', '---')}
 - Criado em: {criado_formatado}
 """.strip()
 
