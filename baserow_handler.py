@@ -153,6 +153,9 @@ def formatar_os(os: dict) -> str:
 """.strip()
 
 def registrar_os(dados):
+    print("✅ [DEBUG] Função registrar_os chamada")
+    print(f"🔁 Usando tabela {TABLE_ID} e token {API_TOKEN[:8]}...")  # mostra só o início do token por segurança
+    
     agora = datetime.datetime.now().isoformat()
     payload = mapear_campos(dados)
     payload[FIELD_MAP["Data/Hora"]] = agora
