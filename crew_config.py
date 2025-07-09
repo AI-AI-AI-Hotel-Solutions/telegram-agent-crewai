@@ -1,5 +1,5 @@
 from crewai import Crew, Agent, Task
-from baserow_handler import executar_acao
+from baserow import executar_acao
 from openai_config import setup_openai
 import json
 
